@@ -1,13 +1,24 @@
 use advrs::lexer::*;
 use advrs::parser::*;
 
-const CODE: &str = r#":
-if op.equals("+"):
-    return a.plus(b)
+const CODE: &str = r#"
+class Cat extends Program:
+    field input
+    field output
+    method main():
+        this.input = Input
+        this.output = Output
+
+        (this.input).program = this
+        (this.output).program = this
+
+        input = (this.input).read()
+        (this.output).write(input)
+    end
 end
-end""#;
+"#;
 
 fn main() {
-    let parsed = parse_block(&mut tokenize(CODE).iter().peekable());
+    let parsed = parse_class(&mut tokenize(CODE).iter().peekable());
     println!("{parsed:?}")
 }

@@ -17,3 +17,19 @@ pub enum Statement {
     If(Expression, Vec<Statement>),
     While(Expression, Vec<Statement>),
 }
+
+#[derive(PartialEq, Clone, Debug)]
+pub struct Method {
+    pub name: String,
+    pub params: Vec<String>,
+    pub body: Option<Vec<Statement>>
+}
+
+#[derive(PartialEq, Clone, Debug)]
+pub struct Class {
+    pub name: String,
+    pub parent: Option<String>,
+    pub is_abstract: bool,
+    pub own_fields: Vec<String>,
+    pub own_methods: Vec<Method>,
+}

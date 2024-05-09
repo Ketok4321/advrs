@@ -4,6 +4,25 @@ use crate::lexer::*;
 use std::slice::Iter;
 use std::iter::Peekable;
 
+fn parse_list<T>(iter: &mut Peekable<Iter<Token>>, parser: fn(&mut Peekable<Iter<Token>>) -> T) -> Vec<T> {
+    assert_eq!(iter.next(), Some(&Token::OpeningParenthesis));
+    let mut elements = Vec::new();
+    if iter.peek() == Some(&&Token::ClosingParenthesis) {
+        _ = iter.next()
+    } else {
+        loop {
+            elements.push(parser(iter));
+            match iter.next() {
+                Some(&Token::Comma) => (),
+                Some(&Token::ClosingParenthesis) => break,
+                _ => panic!("Expected comma or closing parenthesis"),
+            }
+        }
+    }
+
+    elements
+}
+
 pub fn parse_expression(iter: &mut Peekable<Iter<Token>>) -> Expression {
     if let Some(ch) = iter.next() {
         match ch {
@@ -27,20 +46,7 @@ fn parse_expression_further(iter: &mut Peekable<Iter<Token>>, expr: Expression) 
             _ = iter.next();
             if let Some(Token::Identifier(next)) = iter.next() {
                 if let Some(Token::OpeningParenthesis) = iter.peek() {
-                    _ = iter.next();
-                    let mut args = Vec::new();
-                    if iter.peek() == Some(&&Token::ClosingParenthesis) {
-                        _ = iter.next()
-                    } else {
-                        loop {
-                            args.push(parse_expression(iter));
-                            match iter.next() {
-                                Some(&Token::Comma) => (),
-                                Some(&Token::ClosingParenthesis) => break,
-                                _ => panic!("Expected comma or closing parenthesis"),
-                            }
-                        }
-                    }
+                    let args = parse_list(iter, parse_expression);
                     parse_expression_further(iter, Expression::Call(Box::new(expr), next.to_string(), args))
                 } else {
                     parse_expression_further(iter, Expression::GetF(Box::new(expr), next.to_string()))
@@ -104,4 +110,54 @@ pub fn parse_block(iter: &mut Peekable<Iter<Token>>) -> Vec<Statement> {
     _ = iter.next();
 
     result
+}
+
+pub fn parse_class(iter: &mut Peekable<Iter<Token>>) -> Class {
+    assert_eq!(iter.next(), Some(&Token::Class));
+    if let Some(Token::Identifier(name)) = iter.next() {
+        assert_eq!(iter.next(), Some(&Token::Extends));
+        if let Some(Token::Identifier(parent)) = iter.next() {
+            assert_eq!(iter.next(), Some(&Token::BlockStart));
+            
+            let mut fields = Vec::new();
+            let mut methods = Vec::new();
+
+            loop {
+                match iter.next() {
+                    Some(Token::Field) => {
+                        if let Some(Token::Identifier(name)) = iter.next() {
+                            fields.push(name.to_string());
+                        } else {
+                            panic!();
+                        }
+                    },
+                    Some(Token::Method) => {
+                        if let Some(Token::Identifier(name)) = iter.next() {
+                            methods.push(Method {
+                                name: name.to_string(),
+                                params: parse_list(iter, |iter| if let Some(Token::Identifier(name)) = iter.next() { name.to_string() } else { panic!(); }),
+                                body: Some(parse_block(iter)), // TODO: Handle empty bodies
+                            });
+                        } else {
+                            panic!();
+                        }
+                    },
+                    Some(Token::BlockEnd) => break,
+                    _ => panic!(),
+                }
+            }
+
+            Class {
+                name: name.to_string(),
+                is_abstract: false, // TODO: Abstract classes
+                parent: Some(parent.to_string()),
+                own_fields: fields,
+                own_methods: methods,
+            }
+        } else {
+            panic!();
+        }
+    } else {
+        panic!();
+    }
 }

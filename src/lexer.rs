@@ -14,7 +14,11 @@ pub enum Token {
     While,
     BlockStart,
     BlockEnd,
-    String(String)
+    String(String),
+    Class,
+    Extends,
+    Field,
+    Method
 }
 
 pub fn tokenize(input: &str) -> Vec<Token> {
@@ -42,6 +46,10 @@ pub fn tokenize(input: &str) -> Vec<Token> {
                 "if" => Token::If,
                 "while" => Token::While,
                 "end" => Token::BlockEnd,
+                "class" => Token::Class,
+                "extends" => Token::Extends,
+                "field" => Token::Field,
+                "method" => Token::Method,
                 ident => Token::Identifier(ident.to_string())
             }
         } else if cap.name("oppar").is_some() {
