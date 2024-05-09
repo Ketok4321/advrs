@@ -1,76 +1,83 @@
-use regex::Regex;
+use self::Token::*;
 
 #[derive(PartialEq, Clone, Debug)]
 pub enum Token {
     Identifier(String),
-    OpeningParenthesis,
-    ClosingParenthesis,
-    Dot,
-    Comma,
-    EqualsSign,
+    StringLiteral(String),
+
+    BlockStart,
+    BlockEnd,
+
     Is,
     Return,
     If,
     While,
-    BlockStart,
-    BlockEnd,
-    String(String),
     Class,
     Extends,
     Field,
-    Method
+    Method,
+
+    Dot,
+    Comma,
+    EqualsSign,
+    OpeningParens,
+    ClosingParens,
 }
 
 pub fn tokenize(input: &str) -> Vec<Token> {
-    let comment_re = Regex::new(r"(?m)#.*\n").unwrap();
-    let preprocessed = comment_re.replace_all(input, "\n");
-
     let mut result = Vec::new();
+    let mut iter = input.chars().peekable();
 
-    let token_re = Regex::new(concat!(
-        r"(?P<ident>[A-z0-9]+)|",
-        r"(?P<oppar>\()|",
-        r"(?P<clpar>\))|",
-        r"(?P<dot>\.)|",
-        r"(?P<comma>,)|",
-        r"(?P<equals>=)|",
-        r"(?P<blockstart>:)|",
-        r#"(?P<string>"[^"]*")"#,
-        )).unwrap();
-
-    for cap in token_re.captures_iter(preprocessed.as_str()) {
-        let token = if cap.name("ident").is_some() {
-            match cap.name("ident").unwrap() {
-                "is" => Token::Is,
-                "return" => Token::Return,
-                "if" => Token::If,
-                "while" => Token::While,
-                "end" => Token::BlockEnd,
-                "class" => Token::Class,
-                "extends" => Token::Extends,
-                "field" => Token::Field,
-                "method" => Token::Method,
-                ident => Token::Identifier(ident.to_string())
-            }
-        } else if cap.name("oppar").is_some() {
-            Token::OpeningParenthesis
-        } else if cap.name("clpar").is_some() {
-            Token::ClosingParenthesis
-        } else if cap.name("dot").is_some() {
-            Token::Dot
-        } else if cap.name("comma").is_some() {
-            Token::Comma
-        } else if cap.name("equals").is_some() {
-            Token::EqualsSign
-        } else if cap.name("blockstart").is_some() {
-            Token::BlockStart
-        } else if cap.name("string").is_some() {
-            Token::String(cap.name("string").unwrap().to_string())
-        } else {
-            panic!("Invalid token");
+    while let Some(c) = iter.next() {
+        match c {
+            ':' => result.push(BlockStart),
+            '.' => result.push(Dot),
+            ',' => result.push(Comma),
+            '=' => result.push(EqualsSign),
+            '(' => result.push(OpeningParens),
+            ')' => result.push(ClosingParens),
+            '"' => {
+                let mut string = String::new();
+                loop {
+                    match iter.next() {
+                        Some('"') => break,
+                        Some(s) => string.push(s),
+                        None => panic!(),
+                    }
+                }
+                result.push(StringLiteral(string))
+            },
+            i if i.is_alphanumeric() => {
+                let mut string = i.to_string();
+                loop {
+                    match iter.peek() {
+                        Some(s) if s.is_alphanumeric() => { 
+                            string.push(*s);
+                        },
+                        _ => break,
+                    }
+                    _ = iter.next();
+                }
+                result.push(match &*string {
+                    "end" => BlockEnd,
+                    "is" => Is,
+                    "return" => Return,
+                    "if" => If,
+                    "while" => While,
+                    "class" => Class,
+                    "extends" => Extends,
+                    "field" => Field,
+                    "method" => Method,
+                    _ => Identifier(string),
+                })
+            },
+            '#' => 
+                while iter.peek() != Some(&'\n') && iter.peek() != None {
+                    _ = iter.next();
+                }
+            w if w.is_whitespace() => (),
+            _ => panic!(),
         };
-
-        result.push(token)
     }
 
     result

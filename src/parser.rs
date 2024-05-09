@@ -5,16 +5,16 @@ use std::slice::Iter;
 use std::iter::Peekable;
 
 fn parse_list<T>(iter: &mut Peekable<Iter<Token>>, parser: fn(&mut Peekable<Iter<Token>>) -> T) -> Vec<T> {
-    assert_eq!(iter.next(), Some(&Token::OpeningParenthesis));
+    assert_eq!(iter.next(), Some(&Token::OpeningParens));
     let mut elements = Vec::new();
-    if iter.peek() == Some(&&Token::ClosingParenthesis) {
+    if iter.peek() == Some(&&Token::ClosingParens) {
         _ = iter.next()
     } else {
         loop {
             elements.push(parser(iter));
             match iter.next() {
                 Some(&Token::Comma) => (),
-                Some(&Token::ClosingParenthesis) => break,
+                Some(&Token::ClosingParens) => break,
                 _ => panic!("Expected comma or closing parenthesis"),
             }
         }
@@ -27,10 +27,10 @@ pub fn parse_expression(iter: &mut Peekable<Iter<Token>>) -> Expression {
     if let Some(ch) = iter.next() {
         match ch {
             Token::Identifier(id) => parse_expression_further(iter, Expression::Get(id.to_string())),
-            Token::String(str) => parse_expression_further(iter, Expression::String(str.to_string())),
-            Token::OpeningParenthesis => {
+            Token::StringLiteral(str) => parse_expression_further(iter, Expression::String(str.to_string())),
+            Token::OpeningParens => {
                 let result = parse_expression(iter);
-                assert_eq!(iter.next(), Some(&Token::ClosingParenthesis));
+                assert_eq!(iter.next(), Some(&Token::ClosingParens));
                 parse_expression_further(iter, result)
             }
             _ => panic!("Expected identifier, string literal or opening parenthesis"),
@@ -45,7 +45,7 @@ fn parse_expression_further(iter: &mut Peekable<Iter<Token>>, expr: Expression) 
         Some(Token::Dot) => {
             _ = iter.next();
             if let Some(Token::Identifier(next)) = iter.next() {
-                if let Some(Token::OpeningParenthesis) = iter.peek() {
+                if let Some(Token::OpeningParens) = iter.peek() {
                     let args = parse_list(iter, parse_expression);
                     parse_expression_further(iter, Expression::Call(Box::new(expr), next.to_string(), args))
                 } else {

@@ -2,7 +2,7 @@ use advrs::lexer::*;
 use advrs::parser::*;
 
 const CODE: &str = r#"
-class Cat extends Program:
+class Cat extends Program: # you're mom
     field input
     field output
     method main():
