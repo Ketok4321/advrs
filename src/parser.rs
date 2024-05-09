@@ -23,7 +23,7 @@ pub fn parse_expression(iter: &mut Peekable<Iter<Token>>) -> Expression {
 
 fn parse_expression_further(iter: &mut Peekable<Iter<Token>>, expr: Expression) -> Expression {
     match iter.peek() {
-        Option::Some(Token::Dot) => {
+        Some(Token::Dot) => {
             _ = iter.next();
             if let Some(Token::Identifier(next)) = iter.next() {
                 if let Some(Token::OpeningParenthesis) = iter.peek() {
@@ -49,7 +49,7 @@ fn parse_expression_further(iter: &mut Peekable<Iter<Token>>, expr: Expression) 
                 panic!("Expected identifier");
             }
         },
-        Option::Some(Token::Is) => {
+        Some(Token::Is) => {
             _ = iter.next();
             if let Some(Token::Identifier(next)) = iter.next() {
                 parse_expression_further(iter, Expression::Is(Box::new(expr), next.to_string()))
@@ -57,10 +57,51 @@ fn parse_expression_further(iter: &mut Peekable<Iter<Token>>, expr: Expression) 
                 panic!("Expected identifier");
             }
         },
-        Option::Some(Token::EqualsSign) => {
+        Some(Token::EqualsSign) => {
             _ = iter.next();
             Expression::Equals(Box::new(expr), Box::new(parse_expression(iter)))
         },
         _ => expr
     }
+}
+
+pub fn parse_statement(iter: &mut Peekable<Iter<Token>>) -> Statement {
+    match iter.peek() {
+        Some(Token::Return) => {
+            _ = iter.next();
+            Statement::Return(parse_expression(iter))
+        },
+        Some(Token::If) => {
+            _ = iter.next();
+            Statement::If(parse_expression(iter), parse_block(iter))
+        },
+        Some(Token::While) => {
+            _ = iter.next();
+            Statement::While(parse_expression(iter), parse_block(iter))
+        },
+        _ => {
+            let expr = parse_expression(iter);
+            match expr {
+                Expression::Equals(a, b) => match *a {
+                    Expression::Get(var) => Statement::SetV(var, *b),
+                    Expression::GetF(obj, field) => Statement::SetF(*obj, field, *b),
+                    _ => panic!("You can't just set a random expression lol"),
+                },
+                Expression::Call(obj, method, args) => Statement::Call(*obj, method, args),
+                _ => panic!("Expected a statement, got an expression instead"),
+            }
+        }
+    }
+}
+
+pub fn parse_block(iter: &mut Peekable<Iter<Token>>) -> Vec<Statement> {
+    let mut result = Vec::new();
+    
+    assert_eq!(iter.next(), Some(&Token::BlockStart));
+    while iter.peek() != Some(&&Token::BlockEnd) {
+        result.push(parse_statement(iter));
+    }
+    _ = iter.next();
+
+    result
 }
