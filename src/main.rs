@@ -19,6 +19,6 @@ end
 "#;
 
 fn main() {
-    let parsed = parse_class(&mut tokenize(CODE).iter().peekable());
+    let parsed = parse(tokenize(CODE));
     println!("{parsed:?}")
 }

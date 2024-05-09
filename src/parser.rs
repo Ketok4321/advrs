@@ -128,22 +128,22 @@ pub fn parse_class(iter: &mut Peekable<Iter<Token>>) -> Class {
                         if let Some(Token::Identifier(name)) = iter.next() {
                             fields.push(name.to_string());
                         } else {
-                            panic!();
+                            panic!("Expected identifier");
                         }
                     },
                     Some(Token::Method) => {
                         if let Some(Token::Identifier(name)) = iter.next() {
                             methods.push(Method {
                                 name: name.to_string(),
-                                params: parse_list(iter, |iter| if let Some(Token::Identifier(name)) = iter.next() { name.to_string() } else { panic!(); }),
+                                params: parse_list(iter, |iter| if let Some(Token::Identifier(name)) = iter.next() { name.to_string() } else { panic!("Expected identifier"); }),
                                 body: Some(parse_block(iter)), // TODO: Handle empty bodies
                             });
                         } else {
-                            panic!();
+                            panic!("Expected identifier");
                         }
                     },
                     Some(Token::BlockEnd) => break,
-                    _ => panic!(),
+                    _ => panic!("Expected 'field' or 'method'"),
                 }
             }
 
@@ -155,9 +155,21 @@ pub fn parse_class(iter: &mut Peekable<Iter<Token>>) -> Class {
                 own_methods: methods,
             }
         } else {
-            panic!();
+            panic!("Expected identifier");
         }
     } else {
-        panic!();
+        panic!("Expected identifier");
     }
+}
+
+pub fn parse(tokens: Vec<Token>) -> Vec<Class> {
+    let mut iter = tokens.iter().peekable();
+
+    let mut classes = Vec::new();
+
+    while iter.peek() != None {
+        classes.push(parse_class(&mut iter));
+    }
+
+    classes
 }
