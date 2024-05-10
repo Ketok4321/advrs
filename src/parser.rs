@@ -136,7 +136,7 @@ pub fn parse_class(iter: &mut Peekable<Iter<Token>>) -> Class {
                             methods.push(Method {
                                 name: name.to_string(),
                                 params: parse_list(iter, |iter| if let Some(Token::Identifier(name)) = iter.next() { name.to_string() } else { panic!("Expected identifier"); }),
-                                body: Some(parse_block(iter)), // TODO: Handle empty bodies
+                                body: if iter.peek() == Some(&&Token::BlockStart) { Some(parse_block(iter)) } else { None },
                             });
                         } else {
                             panic!("Expected identifier");
