@@ -128,8 +128,7 @@ fn main() {
     classes.extend(parse(tokenize(CODE)));
     let tree = ClassTree::create(&classes);
     println!("{:?}", tree.map);
-    let method = compile_method(&tree, &tree.classes[3].own_methods[0]);
-    println!("{method:?}");
-    let res = run(&tree, &method, new(3), &vec![]);
+    let compiled = compile(&tree);
+    let res = run(&tree, &compiled[3].methods[0], new(3), &vec![]);
     println!("{res:?}");
 }

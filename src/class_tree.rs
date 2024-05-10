@@ -50,4 +50,12 @@ impl ClassTree {
             lie,
         }
     }
+
+    pub fn get_class(&self, name: &String) -> Option<&Class> {
+        if let Some(range) = self.map.get(name) {
+            Some(&self.classes[range.start])
+        } else {
+            None
+        }
+    }
 }

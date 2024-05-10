@@ -30,7 +30,6 @@ pub struct CompiledMethod {
 
 #[derive(PartialEq, Clone, Debug)]
 pub struct CompiledClass {
-    pub name: String,
     pub is_abstract: bool,
     pub fields: Vec<String>,
     pub methods: Vec<CompiledMethod>,
@@ -135,18 +134,29 @@ fn compile_block(class_tree: &ClassTree, result: &mut Vec<OpCode>, locals: &mut 
     result.to_owned()
 }
 
-pub fn compile_method(class_tree: &ClassTree, method: &Method) -> CompiledMethod {
+fn compile_method(class_tree: &ClassTree, method: &Method) -> CompiledMethod {
     CompiledMethod {
         name: method.name.to_owned(),
         body: if let Some(body) = &method.body { Some(compile_block(class_tree, &mut Vec::new(), &mut method.params.to_owned(), &body)) } else { None },
     }
 }
 
-pub fn compile_class(class_tree: &ClassTree, class: &Class) -> CompiledClass {
-    CompiledClass {
-        name: class.name.to_owned(),
-        is_abstract: class.is_abstract,
-        fields: class.own_fields.to_owned(), // TODO: Inheritance
-        methods: class.own_methods.iter().map(|m| compile_method(class_tree, m)).collect(),
+pub fn compile(class_tree: &ClassTree) -> Vec<CompiledClass> {
+    let mut result: Vec<CompiledClass> = Vec::with_capacity(class_tree.classes.len());
+    
+    for c in &class_tree.classes {
+        let (inherited_fields, inherited_methods) = if let Some(pname) = c.parent.to_owned() {
+            let parent = result[class_tree.map.get(&pname).unwrap().start].to_owned();
+            (parent.fields, parent.methods)
+        } else {
+            (vec![], vec![])
+        };
+        result.push(CompiledClass {
+            is_abstract: c.is_abstract,
+            fields: inherited_fields.iter().filter(|f| !c.own_fields.contains(f)).chain(c.own_fields.iter()).map(String::to_owned).collect(),
+            methods: inherited_methods.iter().filter(|m| !c.own_methods.iter().any(|mm| mm.name == m.name)).map(CompiledMethod::to_owned).chain(c.own_methods.iter().map(|m| compile_method(class_tree, m))).collect(),
+        });
     }
+
+    result
 }
