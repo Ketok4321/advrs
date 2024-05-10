@@ -75,8 +75,10 @@ end
 
 class Test extends Program:
     method main():
-        obj = Boolean
+        return this.get(True.not())
+    end
 
+    method get(obj):
         if obj is Object:
             if obj is Program:
                 return Program
@@ -129,6 +131,6 @@ fn main() {
     let tree = ClassTree::create(&classes);
     println!("{:?}", tree.map);
     let compiled = compile(&tree);
-    let res = run(&tree, &compiled[3].methods[0], new(3), &vec![]);
+    let res = run(&tree, &compiled, &compiled[3].methods[0], new(3), &vec![]);
     println!("{res:?}");
 }
