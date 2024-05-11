@@ -58,21 +58,6 @@ class False extends Boolean:
     end
 end
 
-class Cat extends Program:
-    field input
-    field output
-    method main():
-        this.input = Input
-        this.output = Output
-
-        (this.input).program = this
-        (this.output).program = this
-
-        input = (this.input).read()
-        (this.output).write(input)
-    end
-end
-
 class Test extends Program:
     method main():
         return this.get(True.not().or(True))
@@ -130,7 +115,8 @@ fn main() {
     classes.extend(parse(tokenize(CODE)));
     let tree = ClassTree::create(&classes);
     let compiled = compile(&tree);
-    let res = run(&tree, &compiled, &compiled[3].methods[0], new(3), &vec![]);
+    let entrypoint = tree.program.start + 1;
+    let res = run(&tree, &compiled, compiled[entrypoint].methods.iter().find(|m| m.name == "main").unwrap(), new(entrypoint), &vec![]);
 
     println!("{}", res.class_name(&tree));
 }

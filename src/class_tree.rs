@@ -21,6 +21,7 @@ pub struct ClassTree {
     pub null: TypeRange,
     pub truth: TypeRange,
     pub lie: TypeRange,
+    pub program: TypeRange,
 }
 
 impl ClassTree {
@@ -44,6 +45,7 @@ impl ClassTree {
         let null = map.get("Null").unwrap().to_owned();
         let truth = map.get("True").unwrap().to_owned();
         let lie = map.get("False").unwrap().to_owned();
+        let program = map.get("Program").unwrap().to_owned();
 
         ClassTree {
             classes,
@@ -51,6 +53,7 @@ impl ClassTree {
             null,
             truth,
             lie,
+            program,
         }
     }
 
