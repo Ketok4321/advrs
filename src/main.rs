@@ -75,7 +75,7 @@ end
 
 class Test extends Program:
     method main():
-        return this.get(True.not())
+        return this.get(True.not().or(True))
     end
 
     method get(obj):
@@ -129,8 +129,8 @@ fn main() {
     ];
     classes.extend(parse(tokenize(CODE)));
     let tree = ClassTree::create(&classes);
-    println!("{:?}", tree.map);
     let compiled = compile(&tree);
     let res = run(&tree, &compiled, &compiled[3].methods[0], new(3), &vec![]);
-    println!("{res:?}");
+
+    println!("{}", res.class_name(&tree));
 }

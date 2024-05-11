@@ -8,11 +8,21 @@ pub struct Object {
     pub pointer: usize,
 }
 
+impl Object {
+    pub fn class_name(&self, class_tree: &ClassTree) -> String {
+        class_tree.classes[self.class].name.to_owned()
+    }
+}
+
 pub fn new(class: usize) -> Object { // TODO: Proper allocations
     Object {
         class,
         pointer: 0
     }
+}
+
+pub fn null(class_tree : &ClassTree) -> Object {
+    new(class_tree.null.start)
 }
 
 fn bool(class_tree: &ClassTree, b: bool) -> Object {
@@ -73,5 +83,5 @@ pub fn run(class_tree: &ClassTree, classes: &Vec<CompiledClass>, method: &Compil
 
     assert!(stack.len() == 0);
 
-    new(0)
+    null(class_tree)
 }

@@ -18,6 +18,7 @@ impl TypeRange {
 pub struct ClassTree {
     pub classes: Vec<Class>,
     pub map: HashMap<String, TypeRange>, // Start is inclusive, end is exclusive
+    pub null: TypeRange,
     pub truth: TypeRange,
     pub lie: TypeRange,
 }
@@ -40,12 +41,14 @@ impl ClassTree {
 
         add_with_parent(input, None, &mut classes, &mut map);
 
+        let null = map.get("Null").unwrap().to_owned();
         let truth = map.get("True").unwrap().to_owned();
         let lie = map.get("False").unwrap().to_owned();
 
         ClassTree {
             classes,
             map,
+            null,
             truth,
             lie,
         }
