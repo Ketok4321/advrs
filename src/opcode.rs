@@ -25,7 +25,8 @@ pub enum OpCode {
 #[derive(PartialEq, Clone, Debug)]
 pub struct CompiledMethod {
     pub name: String,
-    pub body: Option<Vec<OpCode>>
+    pub body: Option<Vec<OpCode>>,
+    pub locals_size: usize,
 }
 
 #[derive(PartialEq, Clone, Debug)]
@@ -135,9 +136,18 @@ fn compile_block(class_tree: &ClassTree, result: &mut Vec<OpCode>, locals: &mut 
 }
 
 fn compile_method(class_tree: &ClassTree, method: &Method) -> CompiledMethod {
-    CompiledMethod {
-        name: method.name.to_owned(),
-        body: if let Some(body) = &method.body { Some(compile_block(class_tree, &mut Vec::new(), &mut method.params.to_owned(), &body)) } else { None },
+    if let Some(body) = &method.body {
+        CompiledMethod {
+            name: method.name.to_owned(),
+            body: Some(compile_block(class_tree, &mut Vec::new(), &mut method.params.to_owned(), &body)),
+            locals_size: method.params.len(),
+        }
+    } else {
+        CompiledMethod {
+            name: method.name.to_owned(),
+            body: None,
+            locals_size: 0,
+        }
     }
 }
 

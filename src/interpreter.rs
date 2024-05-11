@@ -34,11 +34,11 @@ fn bool(class_tree: &ClassTree, b: bool) -> Object {
 }
 
 pub fn run(class_tree: &ClassTree, classes: &Vec<CompiledClass>, method: &CompiledMethod, this: Object, args: &Vec<Object>) -> Object {
-    let mut stack = Vec::with_capacity(8); // TODO: Alloc on stack
-    let mut vars = [new(0); 16]; // TODO: Dynamic size
-    vars[0..args.len()].copy_from_slice(args);
-    
     if let Some(ops) = &method.body {
+        let mut stack = Vec::with_capacity(8); // TODO: Reuse between methods
+        let mut vars = vec![new(0); method.locals_size];
+        vars[0..args.len()].copy_from_slice(args);
+
         let mut i = 0;
         while i < ops.len() {
             match ops[i].to_owned() {
@@ -77,11 +77,9 @@ pub fn run(class_tree: &ClassTree, classes: &Vec<CompiledClass>, method: &Compil
             }
             i += 1;
         }
+        assert!(stack.len() == 0);
+        null(class_tree)
     } else {
         panic!();
     }
-
-    assert!(stack.len() == 0);
-
-    null(class_tree)
 }
