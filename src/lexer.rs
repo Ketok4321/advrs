@@ -1,7 +1,7 @@
-use self::Token::*;
+use self::TokenKind::*;
 
 #[derive(PartialEq, Clone, Debug)]
-pub enum Token {
+pub enum TokenKind {
     Identifier(String),
     StringLiteral(String),
 
@@ -24,18 +24,28 @@ pub enum Token {
     ClosingParens,
 }
 
+#[derive(PartialEq, Clone, Debug)]
+pub struct Token {
+    pub kind: TokenKind,
+    pub line: usize,
+    pub column: usize,
+}
+
 pub fn tokenize(input: &str) -> Vec<Token> {
     let mut result = Vec::new();
     let mut iter = input.chars().peekable();
 
+    let mut line = 1;
+    let mut column = 1;
+
     while let Some(c) = iter.next() {
-        match c {
-            ':' => result.push(BlockStart),
-            '.' => result.push(Dot),
-            ',' => result.push(Comma),
-            '=' => result.push(EqualsSign),
-            '(' => result.push(OpeningParens),
-            ')' => result.push(ClosingParens),
+        let maybe_kind = match c {
+            ':' => Some(BlockStart),
+            '.' => Some(Dot),
+            ',' => Some(Comma),
+            '=' => Some(EqualsSign),
+            '(' => Some(OpeningParens),
+            ')' => Some(ClosingParens),
             '"' => {
                 let mut string = String::new();
                 loop {
@@ -45,7 +55,7 @@ pub fn tokenize(input: &str) -> Vec<Token> {
                         None => panic!(),
                     }
                 }
-                result.push(StringLiteral(string))
+                Some(StringLiteral(string))
             },
             i if i.is_alphanumeric() => {
                 let mut string = i.to_string();
@@ -58,7 +68,7 @@ pub fn tokenize(input: &str) -> Vec<Token> {
                     }
                     _ = iter.next();
                 }
-                result.push(match &*string {
+                Some(match &*string {
                     "end" => BlockEnd,
                     "is" => Is,
                     "return" => Return,
@@ -71,13 +81,25 @@ pub fn tokenize(input: &str) -> Vec<Token> {
                     _ => Identifier(string),
                 })
             },
-            '#' => 
+            '#' => {
                 while iter.peek() != Some(&'\n') && iter.peek() != None {
                     _ = iter.next();
                 }
-            w if w.is_whitespace() => (),
+                None
+            },
+            '\n' => {
+                line += 1;
+                column = 0;
+                None
+            },
+            w if w.is_whitespace() => None,
             _ => panic!(),
         };
+
+        if let Some(kind) = maybe_kind {
+            result.push(Token { kind, line, column })
+        }
+        column += 1;
     }
 
     result

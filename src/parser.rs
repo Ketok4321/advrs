@@ -1,22 +1,58 @@
 use crate::syntax::*;
 use crate::lexer::*;
+use crate::lexer::TokenKind as TK;
 
 use std::slice::Iter;
 use std::iter::Peekable;
 
+macro_rules! pmatch {
+    ($expr:expr, $( $pat:pat => $expr2:expr ),* $(,)?) => {
+        match $expr {
+            $( Some(Token { kind: $pat, .. }) => $expr2, )*
+            None => panic!("Expected a token, found eof"),
+            Some(Token { line, column, kind }) => {
+                panic!("Line {}, column {}:\nExpected one of: {}\nGot: {:?}", line, column, stringify!($($pat),*), kind);
+            }
+        }
+    };
+}
+
+macro_rules! require {
+    ($token:expr, $pat:pat) => {
+        pmatch!($token,
+            $pat => (),
+        );
+    }
+}
+
+macro_rules! require_identifier {
+    ($token:expr) => {
+        pmatch!($token,
+            TK::Identifier(name) => name,
+        )
+    }
+}
+
+fn is(token: Option<&&Token>, kinds: &[TK]) -> bool {
+    if let Some(tk) = token {
+        kinds.contains(&tk.kind)
+    } else {
+        false
+    }
+}
+
 fn parse_list<T>(iter: &mut Peekable<Iter<Token>>, parser: fn(&mut Peekable<Iter<Token>>) -> T) -> Vec<T> {
-    assert_eq!(iter.next(), Some(&Token::OpeningParens));
+    require!(iter.next(), TK::OpeningParens);
     let mut elements = Vec::new();
-    if iter.peek() == Some(&&Token::ClosingParens) {
+    if is(iter.peek(), &[TK::ClosingParens]) {
         _ = iter.next()
     } else {
         loop {
             elements.push(parser(iter));
-            match iter.next() {
-                Some(&Token::Comma) => (),
-                Some(&Token::ClosingParens) => break,
-                _ => panic!("Expected comma or closing parenthesis"),
-            }
+            pmatch!(iter.next(),
+                TK::Comma => (),
+                TK::ClosingParens => break,
+            );
         }
     }
 
@@ -24,46 +60,35 @@ fn parse_list<T>(iter: &mut Peekable<Iter<Token>>, parser: fn(&mut Peekable<Iter
 }
 
 pub fn parse_expression(iter: &mut Peekable<Iter<Token>>) -> Expression {
-    if let Some(ch) = iter.next() {
-        match ch {
-            Token::Identifier(id) => parse_expression_further(iter, Expression::Get(id.to_string())),
-            Token::StringLiteral(str) => parse_expression_further(iter, Expression::String(str.to_string())),
-            Token::OpeningParens => {
-                let result = parse_expression(iter);
-                assert_eq!(iter.next(), Some(&Token::ClosingParens));
-                parse_expression_further(iter, result)
-            }
-            _ => panic!("Expected identifier, string literal or opening parenthesis"),
-        }
-    } else {
-        panic!("Expected expression");
-    }
+    pmatch!(iter.next(),
+        TK::Identifier(id) => parse_expression_further(iter, Expression::Get(id.to_owned())),
+        TK::StringLiteral(str) => parse_expression_further(iter, Expression::String(str.to_owned())),
+        TK::OpeningParens => {
+            let result = parse_expression(iter);
+            require!(iter.next(), TK::ClosingParens);
+            parse_expression_further(iter, result)
+        },
+    )
 }
 
 fn parse_expression_further(iter: &mut Peekable<Iter<Token>>, expr: Expression) -> Expression {
-    match iter.peek() {
-        Some(Token::Dot) => {
+    match iter.peek().map(|t| &t.kind) {
+        Some(TK::Dot) => {
             _ = iter.next();
-            if let Some(Token::Identifier(next)) = iter.next() {
-                if let Some(Token::OpeningParens) = iter.peek() {
-                    let args = parse_list(iter, parse_expression);
-                    parse_expression_further(iter, Expression::Call(Box::new(expr), next.to_string(), args))
-                } else {
-                    parse_expression_further(iter, Expression::GetF(Box::new(expr), next.to_string()))
-                }
+            let name = require_identifier!(iter.next());
+            if let Some(TK::OpeningParens) = iter.peek().map(|t| &t.kind) {
+                let args = parse_list(iter, parse_expression);
+                parse_expression_further(iter, Expression::Call(Box::new(expr), name.to_owned(), args))
             } else {
-                panic!("Expected identifier");
+                parse_expression_further(iter, Expression::GetF(Box::new(expr), name.to_owned()))
             }
         },
-        Some(Token::Is) => {
+        Some(TK::Is) => {
             _ = iter.next();
-            if let Some(Token::Identifier(next)) = iter.next() {
-                parse_expression_further(iter, Expression::Is(Box::new(expr), next.to_string()))
-            } else {
-                panic!("Expected identifier");
-            }
+            let name = require_identifier!(iter.next());
+            parse_expression_further(iter, Expression::Is(Box::new(expr), name.to_owned()))
         },
-        Some(Token::EqualsSign) => {
+        Some(TK::EqualsSign) => {
             _ = iter.next();
             Expression::Equals(Box::new(expr), Box::new(parse_expression(iter)))
         },
@@ -72,16 +97,16 @@ fn parse_expression_further(iter: &mut Peekable<Iter<Token>>, expr: Expression) 
 }
 
 pub fn parse_statement(iter: &mut Peekable<Iter<Token>>) -> Statement {
-    match iter.peek() {
-        Some(Token::Return) => {
+    match iter.peek().map(|t| &t.kind) {
+        Some(TK::Return) => {
             _ = iter.next();
             Statement::Return(parse_expression(iter))
         },
-        Some(Token::If) => {
+        Some(TK::If) => {
             _ = iter.next();
             Statement::If(parse_expression(iter), parse_block(iter))
         },
-        Some(Token::While) => {
+        Some(TK::While) => {
             _ = iter.next();
             Statement::While(parse_expression(iter), parse_block(iter))
         },
@@ -103,8 +128,8 @@ pub fn parse_statement(iter: &mut Peekable<Iter<Token>>) -> Statement {
 pub fn parse_block(iter: &mut Peekable<Iter<Token>>) -> Vec<Statement> {
     let mut result = Vec::new();
     
-    assert_eq!(iter.next(), Some(&Token::BlockStart));
-    while iter.peek() != Some(&&Token::BlockEnd) {
+    require!(iter.next(), TK::BlockStart);
+    while !is(iter.peek(), &[TK::BlockEnd]) {
         result.push(parse_statement(iter));
     }
     _ = iter.next();
@@ -113,52 +138,39 @@ pub fn parse_block(iter: &mut Peekable<Iter<Token>>) -> Vec<Statement> {
 }
 
 pub fn parse_class(iter: &mut Peekable<Iter<Token>>) -> Class {
-    assert_eq!(iter.next(), Some(&Token::Class));
-    if let Some(Token::Identifier(name)) = iter.next() {
-        assert_eq!(iter.next(), Some(&Token::Extends));
-        if let Some(Token::Identifier(parent)) = iter.next() {
-            assert_eq!(iter.next(), Some(&Token::BlockStart));
-            
-            let mut fields = Vec::new();
-            let mut methods = Vec::new();
+    require!(iter.next(), TK::Class);
+    let name = require_identifier!(iter.next());
+    require!(iter.next(), TK::Extends);
+    let parent = require_identifier!(iter.next());
+    require!(iter.next(), TK::BlockStart);
+    
+    let mut fields = Vec::new();
+    let mut methods = Vec::new();
 
-            loop {
-                match iter.next() {
-                    Some(Token::Field) => {
-                        if let Some(Token::Identifier(name)) = iter.next() {
-                            fields.push(name.to_string());
-                        } else {
-                            panic!("Expected identifier");
-                        }
-                    },
-                    Some(Token::Method) => {
-                        if let Some(Token::Identifier(name)) = iter.next() {
-                            methods.push(Method {
-                                name: name.to_string(),
-                                params: parse_list(iter, |iter| if let Some(Token::Identifier(name)) = iter.next() { name.to_string() } else { panic!("Expected identifier"); }),
-                                body: if iter.peek() == Some(&&Token::BlockStart) { Some(parse_block(iter)) } else { None },
-                            });
-                        } else {
-                            panic!("Expected identifier");
-                        }
-                    },
-                    Some(Token::BlockEnd) => break,
-                    _ => panic!("Expected 'field' or 'method'"),
-                }
-            }
+    loop {
+        pmatch!(iter.next(),
+            TK::Field => {
+                let name = require_identifier!(iter.next());
+                fields.push(name.to_owned());
+            },
+            TK::Method => {
+                let name = require_identifier!(iter.next());
+                methods.push(Method {
+                    name: name.to_owned(),
+                    params: parse_list(iter, |iter| require_identifier!(iter.next()).to_owned()),
+                    body: if is(iter.peek(), &[TK::BlockStart]) { Some(parse_block(iter)) } else { None },
+                });
+            },
+            TK::BlockEnd => break,
+        )
+    }
 
-            Class {
-                name: name.to_string(),
-                is_abstract: false, // TODO: Abstract classes
-                parent: Some(parent.to_string()),
-                own_fields: fields,
-                own_methods: methods,
-            }
-        } else {
-            panic!("Expected identifier");
-        }
-    } else {
-        panic!("Expected identifier");
+    Class {
+        name: name.to_owned(),
+        is_abstract: false, // TODO: Abstract classes
+        parent: Some(parent.to_owned()),
+        own_fields: fields,
+        own_methods: methods,
     }
 }
 
