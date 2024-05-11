@@ -15,7 +15,7 @@ impl TypeRange {
 }
 
 #[derive(PartialEq, Clone, Debug)]
-pub struct ClassTree {
+pub struct ClassTable {
     pub classes: Vec<Class>,
     pub map: HashMap<String, TypeRange>, // Start is inclusive, end is exclusive
     pub null: TypeRange,
@@ -24,8 +24,8 @@ pub struct ClassTree {
     pub program: TypeRange,
 }
 
-impl ClassTree {
-    pub fn create(input: &Vec<Class>) -> ClassTree {
+impl ClassTable {
+    pub fn create(input: &Vec<Class>) -> ClassTable {
         let mut classes = Vec::with_capacity(input.len());
         let mut map = HashMap::with_capacity(input.len());
 
@@ -47,7 +47,7 @@ impl ClassTree {
         let lie = map.get("False").unwrap().to_owned();
         let program = map.get("Program").unwrap().to_owned();
 
-        ClassTree {
+        ClassTable {
             classes,
             map,
             null,

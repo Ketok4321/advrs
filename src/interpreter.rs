@@ -1,4 +1,4 @@
-use crate::class_tree::*;
+use crate::class_table::*;
 use crate::opcode::*;
 use crate::opcode::OpCode::*;
 
@@ -9,8 +9,8 @@ pub struct Object {
 }
 
 impl Object {
-    pub fn class_name(&self, class_tree: &ClassTree) -> String {
-        class_tree.classes[self.class].name.to_owned()
+    pub fn class_name(&self, class_table: &ClassTable) -> String {
+        class_table.classes[self.class].name.to_owned()
     }
 }
 
@@ -21,19 +21,19 @@ pub fn new(class: usize) -> Object { // TODO: Proper allocations
     }
 }
 
-pub fn null(class_tree : &ClassTree) -> Object {
-    new(class_tree.null.start)
+pub fn null(class_table : &ClassTable) -> Object {
+    new(class_table.null.start)
 }
 
-fn bool(class_tree: &ClassTree, b: bool) -> Object {
+fn bool(class_table: &ClassTable, b: bool) -> Object {
     if b {
-        new(class_tree.truth.start)
+        new(class_table.truth.start)
     } else {
-        new(class_tree.lie.start)
+        new(class_table.lie.start)
     }
 }
 
-pub fn run(class_tree: &ClassTree, classes: &Vec<CompiledClass>, method: &CompiledMethod, this: Object, args: &Vec<Object>) -> Object {
+pub fn run(class_table: &ClassTable, classes: &Vec<CompiledClass>, method: &CompiledMethod, this: Object, args: &Vec<Object>) -> Object {
     if let Some(ops) = &method.body {
         let mut stack = Vec::with_capacity(8); // TODO: Reuse between methods
         let mut vars = vec![new(0); method.locals_size];
@@ -50,16 +50,16 @@ pub fn run(class_tree: &ClassTree, classes: &Vec<CompiledClass>, method: &Compil
                     let obj = stack.pop().unwrap();
                     let method = classes[obj.class].methods.iter().find(|&m| m.name == name).unwrap();
                     
-                    stack.push(run(class_tree, classes, method, obj, &argv));
+                    stack.push(run(class_table, classes, method, obj, &argv));
                 },
                 Is(range) => {
                     let class = stack.pop().unwrap().class;
-                    stack.push(bool(class_tree, range.matches(class)));
+                    stack.push(bool(class_table, range.matches(class)));
                 },
                 Equals => {
                     let a = stack.pop().unwrap();
                     let b = stack.pop().unwrap();
-                    stack.push(bool(class_tree, a == b));
+                    stack.push(bool(class_table, a == b));
                 }
                 SetV(id) => vars[id] = stack.pop().unwrap(),
                 Return => {
@@ -67,7 +67,7 @@ pub fn run(class_tree: &ClassTree, classes: &Vec<CompiledClass>, method: &Compil
                     return stack.pop().unwrap()
                 },
                 Jump(expected, location) => {
-                    if !expected ^ (class_tree.truth.matches(stack.pop().unwrap().class)) {
+                    if !expected ^ (class_table.truth.matches(stack.pop().unwrap().class)) {
                         i = location;
                         continue;
                     }
@@ -78,7 +78,7 @@ pub fn run(class_tree: &ClassTree, classes: &Vec<CompiledClass>, method: &Compil
             i += 1;
         }
         assert!(stack.len() == 0);
-        null(class_tree)
+        null(class_table)
     } else {
         panic!();
     }

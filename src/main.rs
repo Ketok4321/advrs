@@ -1,7 +1,7 @@
 use advrs::lexer::*;
 use advrs::syntax::*;
 use advrs::parser::*;
-use advrs::class_tree::*;
+use advrs::class_table::*;
 use advrs::opcode::*;
 use advrs::interpreter::*;
 
@@ -113,10 +113,10 @@ fn main() {
         },
     ];
     classes.extend(parse(tokenize(CODE)));
-    let tree = ClassTree::create(&classes);
-    let compiled = compile(&tree);
-    let entrypoint = tree.program.start + 1;
-    let res = run(&tree, &compiled, compiled[entrypoint].methods.iter().find(|m| m.name == "main").unwrap(), new(entrypoint), &vec![]);
+    let table = ClassTable::create(&classes);
+    let compiled = compile(&table);
+    let entrypoint = table.program.start + 1;
+    let res = run(&table, &compiled, compiled[entrypoint].methods.iter().find(|m| m.name == "main").unwrap(), new(entrypoint), &vec![]);
 
-    println!("{}", res.class_name(&tree));
+    println!("{}", res.class_name(&table));
 }
