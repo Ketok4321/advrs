@@ -33,20 +33,16 @@ macro_rules! require_identifier {
     }
 }
 
-fn is(token: Option<&&Token>, kinds: &[TK]) -> bool {
-    if let Some(tk) = token {
-        kinds.contains(&tk.kind)
-    } else {
-        false
+macro_rules! is {
+    ($token:expr, $kind:pat) => {
+        matches!($token, Some(Token { kind: $kind, .. }))
     }
 }
 
 fn parse_list<T>(iter: &mut Peekable<Iter<Token>>, parser: fn(&mut Peekable<Iter<Token>>) -> T) -> Vec<T> {
     require!(iter.next(), TK::OpeningParens);
     let mut elements = Vec::new();
-    if is(iter.peek(), &[TK::ClosingParens]) {
-        _ = iter.next()
-    } else {
+    if iter.next_if(|t| t.kind == TK::ClosingParens) == None {
         loop {
             elements.push(parser(iter));
             pmatch!(iter.next(),
@@ -129,10 +125,9 @@ pub fn parse_block(iter: &mut Peekable<Iter<Token>>) -> Vec<Statement> {
     let mut result = Vec::new();
     
     require!(iter.next(), TK::BlockStart);
-    while !is(iter.peek(), &[TK::BlockEnd]) {
+    while iter.next_if(|t| t.kind == TK::BlockEnd) == None {
         result.push(parse_statement(iter));
     }
-    _ = iter.next();
 
     result
 }
@@ -158,7 +153,11 @@ pub fn parse_class(iter: &mut Peekable<Iter<Token>>) -> Class {
                 methods.push(Method {
                     name: name.to_owned(),
                     params: parse_list(iter, |iter| require_identifier!(iter.next()).to_owned()),
-                    body: if is(iter.peek(), &[TK::BlockStart]) { Some(parse_block(iter)) } else { None },
+                    body: if is!(iter.peek(), TK::BlockStart) {
+                        Some(parse_block(iter))
+                    } else {
+                        None
+                    },
                 });
             },
             TK::BlockEnd => break,
