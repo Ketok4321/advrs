@@ -116,7 +116,11 @@ fn main() {
     let table = ClassTable::create(&classes);
     let compiled = compile(&table);
     let entrypoint = table.program.start + 1;
-    let res = run(&table, &compiled, compiled[entrypoint].methods.iter().find(|m| m.name == "main").unwrap(), new(entrypoint), &vec![]);
+    let ctx = RunCtx {
+        class_table: table,
+        classes: compiled,
+    };
+    let res = run(&ctx, ctx.classes[entrypoint].methods.iter().find(|m| m.name == "main").unwrap(), new(entrypoint), &vec![]);
 
-    println!("{}", res.class_name(&table));
+    println!("{}", res.class_name(&ctx.class_table));
 }
