@@ -31,6 +31,13 @@ pub struct Token {
     pub column: usize,
 }
 
+fn is_allowed_in_idents(c: char) -> bool {
+    c.is_alphanumeric() || match c {
+        '_' | '+' | '-' | '*' | '/' => true,
+        _ => false,
+    }
+}
+
 pub fn tokenize(input: &str) -> Vec<Token> {
     let mut result = Vec::new();
     let mut iter = input.chars().peekable();
@@ -57,11 +64,11 @@ pub fn tokenize(input: &str) -> Vec<Token> {
                 }
                 Some(StringLiteral(string))
             },
-            i if i.is_alphanumeric() => {
+            i if is_allowed_in_idents(i) => {
                 let mut string = i.to_string();
                 loop {
                     match iter.peek() {
-                        Some(s) if s.is_alphanumeric() => { 
+                        Some(s) if is_allowed_in_idents(*s) => { 
                             string.push(*s);
                         },
                         _ => break,

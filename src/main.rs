@@ -58,9 +58,95 @@ class False extends Boolean:
     end
 end
 
+class LinkedList extends Object:
+    field _first
+    field _last
+
+    method push(value):
+        cell = _LinkedList_Cell
+        cell.value = value
+        cell.prev = this._last
+        
+        if (this._last) is _LinkedList_Cell: # (non-null check)
+            this._last.next = cell
+        end
+
+        this._last = cell
+        if (this._first) is Null:
+            this._first = cell
+        end
+    end
+
+    method pop():
+        old = this._last
+        this._last = old.prev
+
+        if (this._last) is _LinkedList_Cell:
+            this._last.next = Null
+        end
+
+        if (this._first) = old:
+            this._first = Null
+        end
+
+        return old.value
+    end
+
+    method pushStart(value):
+        cell = _LinkedList_Cell
+        cell.value = value
+        cell.next = this._first
+        
+        if (this._first) is _LinkedList_Cell: # (non-null check)
+            this._first.prev = cell
+        end
+
+        this._first = cell
+        if (this._last) is Null:
+            this._last = cell
+        end
+    end
+
+    method popStart():
+        old = this._first
+        this._first = old.next
+
+        if (this._first) is _LinkedList_Cell:
+            this._first.prev = Null
+        end
+
+        if (this._last) = old:
+            this._last = Null
+        end
+
+        return old.value
+    end
+
+    method first():
+        return this._first.value
+    end
+
+    method last():
+        return this._last.value
+    end
+end
+
+class _LinkedList_Cell extends Object:
+    field value
+    field prev
+    field next
+end
+
 class Test extends Program:
+    field list
+
     method main():
-        return this.get(True.not().or(True))
+        this.list = LinkedList
+        this.list.push(True)
+        this.list.push(False)
+        this.list.push(this.list.first())
+
+        return this.list.pop()
     end
 
     method get(obj):
@@ -120,7 +206,7 @@ fn main() {
         class_table: table,
         classes: compiled,
     };
-    let res = run(&ctx, ctx.classes[entrypoint].methods.iter().find(|m| m.name == "main").unwrap(), new(entrypoint), &vec![]);
+    let res = run(&ctx, ctx.classes[entrypoint].methods.iter().find(|m| m.name == "main").unwrap(), Object::new(&ctx, entrypoint), &vec![]);
 
     println!("{}", res.class_name(&ctx.class_table));
 }
