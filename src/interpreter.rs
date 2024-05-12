@@ -77,9 +77,10 @@ pub fn run(ctx: &RunCtx, gc: &mut GC, full_stack: &mut [Object], method: &Compil
 
         macro_rules! pop {
             () => {{
-                stack[stack_pos] = Object::TRUE_NULL; // cuz garbage collector
                 stack_pos -= 1;
-                stack[stack_pos]
+                let res = stack[stack_pos];
+                stack[stack_pos] = Object::TRUE_NULL; // cuz garbage collector
+                res
             }}
         }
 

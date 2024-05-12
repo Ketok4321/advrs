@@ -58,8 +58,8 @@ fn main() {
         classes: compiled,
     };
 
-    let mut stack = vec![Object::TRUE_NULL; 1024];
-    let mut gc = GC::new(&stack[..] as *const [Object], 1024);
+    let mut stack = vec![Object::TRUE_NULL; 8192];
+    let mut gc = GC::new(&stack[..] as *const [Object], 4096);
     stack[0] = Object::new(&ctx, &mut gc, entrypoint);
 
     let res = run(&ctx, &mut gc, &mut stack, ctx.classes[entrypoint].methods.iter().find(|m| m.name == "main").unwrap());
