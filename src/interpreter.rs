@@ -61,7 +61,10 @@ pub fn run(ctx: &RunCtx, method: &CompiledMethod, this: Object, args: &Vec<Objec
         while i < ops.len() {
             match ops[i].to_owned() {
                 New(class) => stack.push(Object::new(ctx, class)),
-                GetV(id) => stack.push(vars[id]), // TODO: Handle null
+                GetV(id) => {
+                    assert_ne!(vars[id], Object::TRUE_NULL);
+                    stack.push(vars[id]);
+                },
                 This => stack.push(this),
                 GetF(name) => {
                     let obj = stack.pop().unwrap();

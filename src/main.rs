@@ -148,29 +148,6 @@ class Test extends Program:
 
         return this.list.pop()
     end
-
-    method get(obj):
-        if obj is Object:
-            if obj is Program:
-                return Program
-            end
-            if obj is Input:
-                return Input
-            end
-            if obj is Output:
-                return Output
-            end
-            if obj is Boolean:
-                if obj is True:
-                    return True
-                end
-                if obj is False:
-                    return False
-                end
-                return Boolean
-            end
-        end
-    end
 end
 "#;
 
