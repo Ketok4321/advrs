@@ -4,6 +4,7 @@ use advrs::parser::*;
 use advrs::class_table::*;
 use advrs::opcode::*;
 use advrs::interpreter::*;
+use advrs::gc::*;
 
 const CODE: &str = r#"
 class Program extends Object:
@@ -321,10 +322,11 @@ fn main() {
         classes: compiled,
     };
 
-    let mut stack = vec![Object::TRUE_NULL; 256];
-    stack[0] = Object::new(&ctx, entrypoint);
+    let mut stack = vec![Object::TRUE_NULL; 1024];
+    let mut gc = GC::new(&stack[..] as *const [Object], 1024);
+    stack[0] = Object::new(&ctx, &mut gc, entrypoint);
 
-    let res = run(&ctx, &mut stack, ctx.classes[entrypoint].methods.iter().find(|m| m.name == "main").unwrap());
+    let res = run(&ctx, &mut gc, &mut stack, ctx.classes[entrypoint].methods.iter().find(|m| m.name == "main").unwrap());
 
     println!("{}", res.class_name(&ctx.class_table));
 }

@@ -1,8 +1,9 @@
 use crate::class_table::*;
 use crate::opcode::*;
 use crate::opcode::OpCode::*;
+use crate::gc::*;
 
-#[derive(PartialEq, Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, Eq)]
 pub struct Object {
     pub class: usize,
     pub contents: *mut [Object],
@@ -10,39 +11,48 @@ pub struct Object {
 
 impl Object {
     pub const TRUE_NULL: Object = Object { class: 0, contents: std::ptr::null_mut::<[Object;0]>() as *mut [Object]};
+
+    pub fn new(ctx: &RunCtx, gc: &mut GC, class: usize) -> Object {
+        let cclass = &ctx.classes[class];
+        let len = cclass.fields.len();
+        let contents = gc.alloc(len);
+
+        for i in 0..len {
+            unsafe { (*contents)[i] = Object::null(ctx, gc) };
+        }
+        
+        Object {
+            class,
+            contents,
+        }
+    }
+
+    pub fn null(ctx: &RunCtx, gc: &mut GC) -> Object {
+        Object::new(ctx, gc, ctx.class_table.null.start)
+    }
+
+    pub fn bool(ctx: &RunCtx, gc: &mut GC, b: bool) -> Object {
+        if b {
+            Object::new(ctx, gc, ctx.class_table.truth.start)
+        } else {
+            Object::new(ctx, gc, ctx.class_table.lie.start)
+        }
+    }
     
     pub fn class_name(&self, class_table: &ClassTable) -> String {
         class_table.classes[self.class].name.to_owned()
     }
+}
 
-    pub fn new(ctx: &RunCtx, class: usize) -> Object {
-        unsafe {
-            let cclass = &ctx.classes[class];
-            let len = cclass.fields.len();
-            let layout = std::alloc::Layout::array::<Object>(len).expect("Invalid layout :<");
-            let contents = std::ptr::slice_from_raw_parts(std::alloc::alloc(layout), len) as *mut [Object];
-
-            for i in 0..len {
-                (*contents)[i] = Object::new(ctx, ctx.class_table.null.start);
-            }
-            
-            Object {
-                class,
-                contents,
-            }
-        }
+impl std::hash::Hash for Object {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        self.contents.hash(state);
     }
+}
 
-    pub fn null(ctx: &RunCtx) -> Object {
-        Object::new(ctx, ctx.class_table.null.start)
-    }
-
-    pub fn bool(ctx: &RunCtx, b: bool) -> Object {
-        if b {
-            Object::new(ctx, ctx.class_table.truth.start)
-        } else {
-            Object::new(ctx, ctx.class_table.lie.start)
-        }
+impl PartialEq for Object {
+    fn eq(&self, other: &Self) -> bool {
+        std::ptr::addr_eq(self.contents, other.contents)
     }
 }
 
@@ -51,7 +61,7 @@ pub struct RunCtx {
     pub classes: Vec<CompiledClass>,
 }
 
-pub fn run(ctx: &RunCtx, full_stack: &mut [Object], method: &CompiledMethod) -> Object {
+pub fn run(ctx: &RunCtx, gc: &mut GC, full_stack: &mut [Object], method: &CompiledMethod) -> Object {
     if let Some(ops) = &method.body {
         let (this, rest) = full_stack.split_first_mut().unwrap();
         let (vars, stack) = rest.split_at_mut(method.locals_size);
@@ -67,6 +77,7 @@ pub fn run(ctx: &RunCtx, full_stack: &mut [Object], method: &CompiledMethod) -> 
 
         macro_rules! pop {
             () => {{
+                stack[stack_pos] = Object::TRUE_NULL; // cuz garbage collector
                 stack_pos -= 1;
                 stack[stack_pos]
             }}
@@ -75,7 +86,7 @@ pub fn run(ctx: &RunCtx, full_stack: &mut [Object], method: &CompiledMethod) -> 
         let mut i = 0;
         while i < ops.len() {
             match ops[i].to_owned() {
-                New(class) => push!(Object::new(ctx, class)),
+                New(class) => push!(Object::new(ctx, gc, class)),
                 GetV(id) => {
                     assert_ne!(vars[id], Object::TRUE_NULL);
                     push!(vars[id]);
@@ -95,16 +106,16 @@ pub fn run(ctx: &RunCtx, full_stack: &mut [Object], method: &CompiledMethod) -> 
                     let method = ctx.classes[obj.class].methods.iter().find(|&m| m.name == name).unwrap();
 
                     stack_pos = obj_i;
-                    push!(run(ctx, &mut stack[obj_i..], method));
+                    push!(run(ctx, gc, &mut stack[obj_i..], method));
                 },
                 Is(range) => {
                     let class = pop!().class;
-                    push!(Object::bool(ctx, range.matches(class)));
+                    push!(Object::bool(ctx, gc, range.matches(class)));
                 },
                 Equals => {
                     let a = pop!();
                     let b = pop!();
-                    push!(Object::bool(ctx, a == b));
+                    push!(Object::bool(ctx, gc, a == b));
                 }
                 SetV(id) => vars[id] = pop!(),
                 SetF(name) => {
@@ -133,7 +144,7 @@ pub fn run(ctx: &RunCtx, full_stack: &mut [Object], method: &CompiledMethod) -> 
             i += 1;
         }
         assert_eq!(stack_pos, 0);
-        Object::null(ctx)
+        Object::null(ctx, gc)
     } else {
         panic!("Attempted to run a method without a body");
     }
