@@ -73,7 +73,7 @@ fn compile_expr(class_table: &ClassTable, locals: &Vec<String>, expr: &Expressio
     }
 }
 
-fn compile_block(class_table: &ClassTable, result: &mut Vec<OpCode>, locals: &mut Vec<String>, block: &Vec<Statement>) -> Vec<OpCode> {
+fn compile_block(class_table: &ClassTable, result: &mut Vec<OpCode>, locals: &mut Vec<String>, block: &Vec<Statement>) {
     for stmt in block {
         match stmt {
             Statement::SetV(name, value) => {
@@ -119,16 +119,16 @@ fn compile_block(class_table: &ClassTable, result: &mut Vec<OpCode>, locals: &mu
             },
         }
     }
-
-    result.to_owned()
 }
 
 fn compile_method(class_table: &ClassTable, method: &Method) -> CompiledMethod {
     if let Some(body) = &method.body {
         let mut locals = method.params.to_owned();
+        let mut compiled_body = Vec::new();
+        compile_block(class_table, &mut compiled_body, &mut locals, &body);
         CompiledMethod {
             name: method.name.to_owned(),
-            body: Some(compile_block(class_table, &mut Vec::new(), &mut locals, &body)),
+            body: Some(compiled_body),
             locals_size: locals.len(),
         }
     } else {
@@ -144,15 +144,15 @@ pub fn compile(class_table: &ClassTable) -> Vec<CompiledClass> {
     let mut result: Vec<CompiledClass> = Vec::with_capacity(class_table.classes.len());
     
     for c in &class_table.classes {
-        let (inherited_fields, inherited_methods) = if let Some(pname) = c.parent.to_owned() {
-            let parent = result[class_table.map.get(&pname).unwrap().start].to_owned();
-            (parent.fields, parent.methods)
+        let (inherited_fields, inherited_methods) = if let Some(pname) = &c.parent {
+            let parent = &result[class_table.map.get(pname).unwrap().start];
+            (parent.fields.to_owned(), parent.methods.to_owned())
         } else {
             (vec![], vec![])
         };
         result.push(CompiledClass {
-            fields: inherited_fields.iter().filter(|f| !c.own_fields.contains(f)).chain(c.own_fields.iter()).map(String::to_owned).collect(),
-            methods: inherited_methods.iter().filter(|m| !c.own_methods.iter().any(|mm| mm.name == m.name)).map(CompiledMethod::to_owned).chain(c.own_methods.iter().map(|m| compile_method(class_table, m))).collect(),
+            fields: inherited_fields.into_iter().filter(|f| !c.own_fields.contains(f)).chain(c.own_fields.iter().map(String::to_owned)).collect(),
+            methods: inherited_methods.into_iter().filter(|m| !c.own_methods.iter().any(|mm| mm.name == m.name)).chain(c.own_methods.iter().map(|m| compile_method(class_table, m))).collect(),
         });
     }
 
