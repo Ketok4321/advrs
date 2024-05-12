@@ -36,20 +36,21 @@ fn main() {
     let table = ClassTable::create(&classes);
     let compiled = compile(&table);
     let entrypoint = {
-        let diff = table.program.end - table.program.start;
+        let diff = table.program.1 - table.program.0;
         match diff {
+            0 => panic!("Program class not defined"),
             1 => panic!("No class extending program"),
-            2 => table.program.start + 1,
+            2 => table.program.0 + 1,
             _ => {
                 println!("Choose which one to run:");
-                for p in table.program.start+1..table.program.end {
-                    println!("{}) {}", p - table.program.start, table.classes[p].name);
+                for p in table.program.0+1..table.program.1 {
+                    println!("{}) {}", p - table.program.0, table.classes[p].name);
                 }
                 let mut inp = String::new();
                 io::stdin().read_line(&mut inp).expect("Failed to read line");
                 let n = inp.trim().parse::<usize>().expect("Expected an integer");
                 assert!(n >= 1 && n < diff);
-                table.program.start + n
+                table.program.1 + n
             }
         }
     };

@@ -39,7 +39,7 @@ fn compile_expr(class_table: &ClassTable, locals: &Vec<String>, expr: &Expressio
     match expr {
         Expression::Get(name) if name == "this" => vec![This],
         Expression::Get(name) if locals.contains(name) => vec![GetV(locals.iter().position(|l| l == name).unwrap())],
-        Expression::Get(name) if class_table.map.contains_key(name) => vec![New(class_table.map.get(name).unwrap().start)],
+        Expression::Get(name) if class_table.map.contains_key(name) => vec![New(class_table.map.get(name).unwrap().0)],
         Expression::Get(name) => panic!("No such class or variable: {name}"),
         Expression::GetF(obj, name) => {
             let mut ops = compile_expr(class_table, locals, &*obj);
@@ -145,7 +145,7 @@ pub fn compile(class_table: &ClassTable) -> Vec<CompiledClass> {
     
     for c in &class_table.classes {
         let (inherited_fields, inherited_methods) = if let Some(pname) = &c.parent {
-            let parent = &result[class_table.map.get(pname).unwrap().start];
+            let parent = &result[class_table.map.get(pname).unwrap().0];
             (parent.fields.to_owned(), parent.methods.to_owned())
         } else {
             (vec![], vec![])

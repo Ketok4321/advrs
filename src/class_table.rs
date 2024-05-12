@@ -3,14 +3,13 @@ use std::collections::HashMap;
 use crate::syntax::*;
 
 #[derive(PartialEq, Clone, Copy, Debug)]
-pub struct TypeRange {
-    pub start: usize,
-    pub end: usize,
-}
+pub struct TypeRange(pub usize, pub usize);
 
 impl TypeRange {
+    pub const EMPTY: Self = Self(0, 0);
+
     pub fn matches(&self, class: usize) -> bool {
-        return class >= self.start && class < self.end;
+        return class >= self.0 && class < self.1;
     }
 }
 
@@ -47,17 +46,17 @@ impl ClassTable {
                     add_with_parent(input, Some(c.name.to_owned()), classes, map, parent_map);
                     let end = classes.len();
                     
-                    map.insert(c.name.to_owned(), TypeRange { start, end });
+                    map.insert(c.name.to_owned(), TypeRange(start, end));
                 }
             }
         }
 
         add_with_parent(input, None, &mut classes, &mut map, &parent_map);
 
-        let null = map.get("Null").unwrap().to_owned();
-        let truth = map.get("True").unwrap().to_owned();
-        let lie = map.get("False").unwrap().to_owned();
-        let program = map.get("Program").unwrap().to_owned();
+        let null = map.get("Null").unwrap().to_owned(); // This one will always unwrap
+        let truth = map.get("True").unwrap_or(&TypeRange::EMPTY).to_owned();
+        let lie = map.get("False").unwrap_or(&TypeRange::EMPTY).to_owned();
+        let program = map.get("Program").unwrap_or(&TypeRange::EMPTY).to_owned();
 
         ClassTable {
             classes,
@@ -71,7 +70,7 @@ impl ClassTable {
 
     pub fn get_class(&self, name: &String) -> Option<&Class> {
         if let Some(range) = self.map.get(name) {
-            Some(&self.classes[range.start])
+            Some(&self.classes[range.0])
         } else {
             None
         }

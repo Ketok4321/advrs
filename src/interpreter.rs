@@ -10,32 +10,40 @@ pub struct Object {
 }
 
 impl Object {
-    pub const TRUE_NULL: Object = Object { class: 0, contents: std::ptr::null_mut::<[Object;0]>() as *mut [Object]};
+    pub const TRUE_NULL: Self = Self { class: 0, contents: std::ptr::null_mut::<[Self;0]>() as *mut [Self]};
 
-    pub fn new(ctx: &RunCtx, gc: &mut GC, class: usize) -> Object {
+    pub fn new(ctx: &RunCtx, gc: &mut GC, class: usize) -> Self {
         let cclass = &ctx.classes[class];
         let len = cclass.fields.len();
         let contents = gc.alloc(len);
 
         for i in 0..len {
-            unsafe { (*contents)[i] = Object::null(ctx, gc) };
+            unsafe { (*contents)[i] = Self::null(ctx, gc) };
         }
         
-        Object {
+        Self {
             class,
             contents,
         }
     }
 
-    pub fn null(ctx: &RunCtx, gc: &mut GC) -> Object {
-        Object::new(ctx, gc, ctx.class_table.null.start)
+    pub fn new_r(ctx: &RunCtx, gc: &mut GC, range: TypeRange) -> Self {
+        if range == TypeRange::EMPTY {
+            Self::null(ctx, gc)
+        } else {
+            Self::new(ctx, gc, range.0)
+        }
     }
 
-    pub fn bool(ctx: &RunCtx, gc: &mut GC, b: bool) -> Object {
+    pub fn null(ctx: &RunCtx, gc: &mut GC) -> Self {
+        Self::new_r(ctx, gc, ctx.class_table.null)
+    }
+
+    pub fn bool(ctx: &RunCtx, gc: &mut GC, b: bool) -> Self {
         if b {
-            Object::new(ctx, gc, ctx.class_table.truth.start)
+            Self::new_r(ctx, gc, ctx.class_table.truth)
         } else {
-            Object::new(ctx, gc, ctx.class_table.lie.start)
+            Self::new_r(ctx, gc, ctx.class_table.lie)
         }
     }
     
@@ -110,8 +118,7 @@ pub fn run(ctx: &RunCtx, gc: &mut GC, full_stack: &mut [Object], method: &Compil
                     push!(run(ctx, gc, &mut stack[obj_i..], method));
                 },
                 Is(range) => {
-                    let class = pop!().class;
-                    push!(Object::bool(ctx, gc, range.matches(class)));
+                    push!(Object::bool(ctx, gc, range.matches(pop!().class)));
                 },
                 Equals => {
                     let a = pop!();
