@@ -125,10 +125,10 @@ fn compile_block(class_table: &ClassTable, result: &mut Vec<OpCode>, locals: &mu
 
 fn compile_method(class_table: &ClassTable, method: &Method) -> CompiledMethod {
     if let Some(body) = &method.body {
-        let mut locals = Vec::new();
+        let mut locals = method.params.to_owned();
         CompiledMethod {
             name: method.name.to_owned(),
-            body: Some(compile_block(class_table, &mut locals, &mut method.params.to_owned(), &body)),
+            body: Some(compile_block(class_table, &mut Vec::new(), &mut locals, &body)),
             locals_size: locals.len(),
         }
     } else {
