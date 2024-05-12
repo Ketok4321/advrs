@@ -166,7 +166,6 @@ pub fn parse_class(iter: &mut Peekable<Iter<Token>>) -> Class {
 
     Class {
         name: name.to_owned(),
-        is_abstract: false, // TODO: Abstract classes
         parent: Some(parent.to_owned()),
         own_fields: fields,
         own_methods: methods,

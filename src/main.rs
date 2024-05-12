@@ -58,6 +58,145 @@ class False extends Boolean:
     end
 end
 
+class Number extends Object:
+    method ++()
+    
+    method --()
+    
+    method isZero()
+    
+    method toString()
+    
+    method +(n):
+        if n.isZero():
+            return this
+        end
+        return (this.++()).+(n.--())
+    end
+    
+    method -(n):
+        if n.isZero():
+            return this
+        end
+        return (this.--()).-(n.--())
+    end
+    
+    method *(n):
+        result = this.-(this)
+        while (n.isZero()).not():
+            result = result.+(this)
+            n = n.--()
+        end
+        return result
+    end
+    
+    method /(n):
+        result = this.-(this)
+        a = this
+        while (a.isZero()).not():
+            a = a.-(n)
+            result = result.++()
+        end
+        return result
+    end
+    
+    method equals(n):
+        return this.equalsStr(n.toString())
+    end
+    
+    method equalsStr(str):
+        return (this.toString()).equals(str)
+    end
+    
+    method greaterThan(n):
+        if n.isZero():
+            if this.isZero():
+                return False
+            end
+            return True
+        end
+        if this.isZero():
+            return False
+        end
+        return (this.--()).greaterThan(n.--())
+    end
+    
+    method lesserThan(n):
+        if n.isZero():
+            if this.isZero():
+                return False
+            end
+            return False
+        end
+        if this.isZero():
+            return True
+        end
+        return (this.--()).lesserThan(n.--())
+    end
+end
+
+class ClassNumber extends Number:
+    method isZero():
+        return False
+    end
+end
+
+class 0 extends ClassNumber:
+    method ++():
+        return 1
+    end
+    
+    method isZero():
+        return True
+    end
+end
+
+class 1 extends ClassNumber:
+    method ++():
+        return 2
+    end
+    
+    method --():
+        return 0
+    end
+end
+
+class 2 extends ClassNumber:
+    method ++():
+        return 3
+    end
+    
+    method --():
+        return 1
+    end
+end
+
+class 3 extends ClassNumber:
+    method ++():
+        return 4
+    end
+    
+    method --():
+        return 2
+    end
+end
+
+class 4 extends ClassNumber:
+    method ++():
+        return 5
+    end
+    
+    method --():
+        return 3
+    end
+end
+
+class 5 extends ClassNumber:
+    method --():
+        return 4
+    end
+end
+
 class LinkedList extends Object:
     field _first
     field _last
@@ -145,6 +284,7 @@ class Test extends Program:
         this.list.push(True)
         this.list.push(False)
         this.list.push(this.list.first())
+        this.list.push(2.*(2))
 
         return this.list.pop()
     end
@@ -155,21 +295,18 @@ fn main() {
     let mut classes = vec![
         Class {
             name: "Object".to_string(),
-            is_abstract: false,
             parent: None,
             own_fields: vec![],
             own_methods: vec![]
         },
         Class {
             name: "String".to_string(),
-            is_abstract: false,
             parent: None,
             own_fields: vec![],
             own_methods: vec![]
         },
         Class {
             name: "Null".to_string(),
-            is_abstract: false,
             parent: None,
             own_fields: vec![],
             own_methods: vec![]

@@ -29,7 +29,6 @@ pub struct Method {
 pub struct Class {
     pub name: String,
     pub parent: Option<String>,
-    pub is_abstract: bool,
     pub own_fields: Vec<String>,
     pub own_methods: Vec<Method>,
 }

@@ -31,7 +31,6 @@ pub struct CompiledMethod {
 
 #[derive(PartialEq, Clone, Debug)]
 pub struct CompiledClass {
-    pub is_abstract: bool,
     pub fields: Vec<String>,
     pub methods: Vec<CompiledMethod>,
 }
@@ -152,7 +151,6 @@ pub fn compile(class_table: &ClassTable) -> Vec<CompiledClass> {
             (vec![], vec![])
         };
         result.push(CompiledClass {
-            is_abstract: c.is_abstract,
             fields: inherited_fields.iter().filter(|f| !c.own_fields.contains(f)).chain(c.own_fields.iter()).map(String::to_owned).collect(),
             methods: inherited_methods.iter().filter(|m| !c.own_methods.iter().any(|mm| mm.name == m.name)).map(CompiledMethod::to_owned).chain(c.own_methods.iter().map(|m| compile_method(class_table, m))).collect(),
         });
