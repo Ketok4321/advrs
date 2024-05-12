@@ -320,7 +320,11 @@ fn main() {
         class_table: table,
         classes: compiled,
     };
-    let res = run(&ctx, ctx.classes[entrypoint].methods.iter().find(|m| m.name == "main").unwrap(), Object::new(&ctx, entrypoint), &vec![]);
+
+    let mut stack = vec![Object::TRUE_NULL; 256];
+    stack[0] = Object::new(&ctx, entrypoint);
+
+    let res = run(&ctx, &mut stack, ctx.classes[entrypoint].methods.iter().find(|m| m.name == "main").unwrap());
 
     println!("{}", res.class_name(&ctx.class_table));
 }
