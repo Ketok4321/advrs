@@ -29,18 +29,30 @@ impl ClassTable {
         let mut classes = Vec::with_capacity(input.len());
         let mut map = HashMap::with_capacity(input.len());
 
-        fn add_with_parent(input: &Vec<Class>, parent: Option<String>, classes: &mut Vec<Class>, map: &mut HashMap<String, TypeRange>) {
-            for c in input.iter().filter(|c| c.parent == parent) {
-                let start = classes.len();
-                classes.push(c.to_owned());
-                add_with_parent(input, Some(c.name.to_owned()), classes, map);
-                let end = classes.len();
-                
-                map.insert(c.name.to_owned(), TypeRange { start, end });
+        let mut parent_map: HashMap<Option<String>, Vec<&Class>> = HashMap::new();
+
+        for c in input {
+            if let Some(vec) = parent_map.get_mut(&c.parent) {
+                vec.push(c);
+            } else {
+                parent_map.insert(c.parent.to_owned(), vec![c]);
             }
         }
 
-        add_with_parent(input, None, &mut classes, &mut map);
+        fn add_with_parent(input: &Vec<Class>, parent: Option<String>, classes: &mut Vec<Class>, map: &mut HashMap<String, TypeRange>, parent_map: &HashMap<Option<String>, Vec<&Class>>) {
+            if let Some(pclasses) = parent_map.get(&parent) {
+                for c in pclasses {
+                    let start = classes.len();
+                    classes.push(c.to_owned().to_owned());
+                    add_with_parent(input, Some(c.name.to_owned()), classes, map, parent_map);
+                    let end = classes.len();
+                    
+                    map.insert(c.name.to_owned(), TypeRange { start, end });
+                }
+            }
+        }
+
+        add_with_parent(input, None, &mut classes, &mut map, &parent_map);
 
         let null = map.get("Null").unwrap().to_owned();
         let truth = map.get("True").unwrap().to_owned();
