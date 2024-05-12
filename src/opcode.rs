@@ -39,20 +39,9 @@ pub struct CompiledClass {
 fn compile_expr(class_table: &ClassTable, locals: &Vec<String>, expr: &Expression) -> Vec<OpCode> {
     match expr {
         Expression::Get(name) if name == "this" => vec![This],
-        Expression::Get(name) if locals.contains(name) => {
-            if let Some(id) = locals.iter().position(|l| l == name) {
-                vec![GetV(id)]
-            } else {
-                panic!();
-            }
-        },
-        Expression::Get(name) => {
-            if let Some(range) = class_table.map.get(name) {
-                vec![New(range.start)]
-            } else {
-                panic!();
-            }
-        },
+        Expression::Get(name) if locals.contains(name) => vec![GetV(locals.iter().position(|l| l == name).unwrap())],
+        Expression::Get(name) if class_table.map.contains_key(name) => vec![New(class_table.map.get(name).unwrap().start)],
+        Expression::Get(name) => panic!("No such class or variable: {name}"),
         Expression::GetF(obj, name) => {
             let mut ops = compile_expr(class_table, locals, &*obj);
             ops.push(GetF(name.to_owned()));
@@ -70,7 +59,7 @@ fn compile_expr(class_table: &ClassTable, locals: &Vec<String>, expr: &Expressio
                 ops.push(Is(range.to_owned()));
                 ops
            } else {
-                panic!();
+                panic!("No such class: {class}");
            }
         },
         Expression::Equals(a, b) => {

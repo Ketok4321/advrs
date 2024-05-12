@@ -59,7 +59,7 @@ pub fn tokenize(input: &str) -> Vec<Token> {
                     match iter.next() {
                         Some('"') => break,
                         Some(s) => string.push(s),
-                        None => panic!(),
+                        None => panic!("Expected a string, found eof"),
                     }
                 }
                 Some(StringLiteral(string))
@@ -100,7 +100,7 @@ pub fn tokenize(input: &str) -> Vec<Token> {
                 None
             },
             w if w.is_whitespace() => None,
-            _ => panic!(),
+            c => panic!("Unexpected '{c}' character at {line}:{column}"),
         };
 
         if let Some(kind) = maybe_kind {

@@ -71,7 +71,7 @@ pub fn run(ctx: &RunCtx, method: &CompiledMethod, this: Object, args: &Vec<Objec
                     if let Some(index) = ctx.classes[obj.class].fields.iter().position(|f| **f == name) {
                         unsafe { stack.push((*obj.contents)[index]); }
                     } else {
-                        panic!();
+                        panic!("No such field: {name}");
                     }
                 },
                 Call(name, argc) => {
@@ -98,7 +98,7 @@ pub fn run(ctx: &RunCtx, method: &CompiledMethod, this: Object, args: &Vec<Objec
                     if let Some(index) = ctx.classes[obj.class].fields.iter().position(|f| **f == name) {
                         unsafe { (*obj.contents)[index] = value; }
                     } else {
-                        panic!();
+                        panic!("No such field: {name}");
                     }
                 },
                 Return => {
@@ -119,6 +119,6 @@ pub fn run(ctx: &RunCtx, method: &CompiledMethod, this: Object, args: &Vec<Objec
         assert!(stack.len() == 0);
         Object::null(ctx)
     } else {
-        panic!();
+        panic!("Attempted to run a method without a body");
     }
 }
