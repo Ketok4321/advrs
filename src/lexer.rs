@@ -3,7 +3,6 @@ use self::TokenKind::*;
 #[derive(PartialEq, Clone, Debug)]
 pub enum TokenKind {
     Identifier(String),
-    StringLiteral(String),
 
     BlockStart,
     BlockEnd,
@@ -53,17 +52,6 @@ pub fn tokenize(input: &str) -> Vec<Token> {
             '=' => Some(EqualsSign),
             '(' => Some(OpeningParens),
             ')' => Some(ClosingParens),
-            '"' => {
-                let mut string = String::new();
-                loop {
-                    match iter.next() {
-                        Some('"') => break,
-                        Some(s) => string.push(s),
-                        None => panic!("Expected a string, found eof"),
-                    }
-                }
-                Some(StringLiteral(string))
-            },
             i if is_allowed_in_idents(i) => {
                 let mut string = i.to_string();
                 loop {
@@ -87,6 +75,17 @@ pub fn tokenize(input: &str) -> Vec<Token> {
                     "method" => Method,
                     _ => Identifier(string),
                 })
+            },
+            '\'' => {
+                let mut string = String::new();
+                loop {
+                    match iter.next() {
+                        Some('\'') => break,
+                        Some(s) => string.push(s),
+                        None => panic!("Expected a single quote, found eof"),
+                    }
+                }
+                Some(Identifier(string))
             },
             '#' => {
                 while iter.peek() != Some(&'\n') && iter.peek() != None {

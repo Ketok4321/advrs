@@ -17,12 +17,6 @@ fn main() {
             own_methods: vec![]
         },
         Class {
-            name: "String".to_string(),
-            parent: None,
-            own_fields: vec![],
-            own_methods: vec![]
-        },
-        Class {
             name: "Null".to_string(),
             parent: None,
             own_fields: vec![],
@@ -63,7 +57,7 @@ fn main() {
     let mut gc = GC::new(&stack[..] as *const [Object], 4096);
     stack[0] = Object::new(&ctx, &mut gc, entrypoint);
 
-    let res = run(&ctx, &mut gc, &mut stack, ctx.classes[entrypoint].methods.iter().find(|m| m.name == "main").unwrap());
+    let res = run(&ctx, &mut gc, &mut IOManager::new(), &mut stack, ctx.classes[entrypoint].methods.iter().find(|m| m.name == "main").unwrap());
 
     println!("{}", res.class_name(&ctx.class_table));
 }

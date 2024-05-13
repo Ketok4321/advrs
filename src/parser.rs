@@ -58,7 +58,6 @@ fn parse_list<T>(iter: &mut Peekable<Iter<Token>>, parser: fn(&mut Peekable<Iter
 pub fn parse_expression(iter: &mut Peekable<Iter<Token>>) -> Expression {
     pmatch!(iter.next(),
         TK::Identifier(id) => parse_expression_further(iter, Expression::Get(id.to_owned())),
-        TK::StringLiteral(str) => parse_expression_further(iter, Expression::String(str.to_owned())),
         TK::OpeningParens => {
             let result = parse_expression(iter);
             require!(iter.next(), TK::ClosingParens);

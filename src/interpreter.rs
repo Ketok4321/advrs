@@ -73,7 +73,40 @@ pub struct RunCtx {
     pub classes: Vec<CompiledClass>,
 }
 
-pub fn run(ctx: &RunCtx, gc: &mut GC, full_stack: &mut [Object], method: &CompiledMethod) -> Object {
+pub struct IOManager {
+    write_stack: String,
+    read_stack: String,
+}
+
+impl IOManager {
+    pub fn new() -> Self {
+        Self {
+            write_stack: String::new(),
+            read_stack: String::new(),
+        }
+    }
+
+    pub fn write_char(&mut self, c: char) {
+        self.write_stack.push(c);
+    }
+
+    pub fn write_end(&mut self) {
+        println!("{}", self.write_stack);
+        self.write_stack.clear();
+    }
+
+    pub fn read_start(&mut self) {
+        self.read_stack.clear();
+        std::io::stdin().read_line(&mut self.read_stack).expect("Failed to read from stdin");
+        self.read_stack = self.read_stack.chars().rev().collect();
+    }
+
+    pub fn read_char(&mut self) -> Option<char> {
+        self.read_stack.pop()
+    }
+}
+
+pub fn run(ctx: &RunCtx, gc: &mut GC, io: &mut IOManager, full_stack: &mut [Object], method: &CompiledMethod) -> Object {
     let (this, rest) = full_stack.split_first_mut().unwrap();
     if let Some(ops) = &method.body {
         let (vars, stack) = rest.split_at_mut(method.locals_size);
@@ -117,9 +150,10 @@ pub fn run(ctx: &RunCtx, gc: &mut GC, full_stack: &mut [Object], method: &Compil
                     let obj_i = stack_pos - argc - 1;
                     let obj = stack[obj_i];
                     let method = ctx.classes[obj.class].methods.iter().find(|&m| m.name == name).unwrap();
+                    assert_eq!(argc, method.params_count);
 
                     stack_pos = obj_i;
-                    push!(run(ctx, gc, &mut stack[obj_i..], method));
+                    push!(run(ctx, gc, io, &mut stack[obj_i..], method));
                 },
                 Is(range) => {
                     push!(Object::bool(ctx, gc, pop!().is(&range)));
@@ -151,16 +185,33 @@ pub fn run(ctx: &RunCtx, gc: &mut GC, full_stack: &mut [Object], method: &Compil
                     }
                 },
                 Pop => _ = pop!(),
-                _ => panic!(),
             }
             i += 1;
         }
         assert_eq!(stack_pos, 0);
     } else {
         match method.name.as_str() {
-            "write" if this.is(&ctx.class_table.output) => {
-                assert_ne!(rest[0], Object::TRUE_NULL);
-                println!("{}", rest[0].class_name(&ctx.class_table));
+            "write_char" if this.is(&ctx.class_table.program) => {
+                let char = rest[0].class_name(&ctx.class_table);
+                assert!(char.len() == 1);
+                io.write_char(char.chars().nth(0).unwrap());
+            },
+            "write_end" if this.is(&ctx.class_table.program) => {
+                io.write_end();
+            },
+            "read_start" if this.is(&ctx.class_table.program) => {
+                io.read_start();
+            },
+            "read_char" if this.is(&ctx.class_table.program) => {
+                if let Some(c) = io.read_char() {
+                    if let Some(class) = ctx.class_table.map.get(&c.to_string()) {
+                        return Object::new_r(ctx, gc, *class);
+                    } else {
+                        return Object::null(ctx, gc);
+                    }
+                } else {
+                    return Object::null(ctx, gc);
+                }
             },
             _ => panic!("Attempted to run a method without a body"),
         }

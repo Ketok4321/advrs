@@ -21,8 +21,6 @@ pub struct ClassTable {
     pub truth: TypeRange,
     pub lie: TypeRange,
     pub program: TypeRange,
-    pub input: TypeRange,
-    pub output: TypeRange,
 }
 
 impl ClassTable {
@@ -59,8 +57,6 @@ impl ClassTable {
         let truth = map.get("True").unwrap_or(&TypeRange::EMPTY).to_owned();
         let lie = map.get("False").unwrap_or(&TypeRange::EMPTY).to_owned();
         let program = map.get("Program").unwrap_or(&TypeRange::EMPTY).to_owned();
-        let input = map.get("Input").unwrap_or(&TypeRange::EMPTY).to_owned();
-        let output = map.get("Output").unwrap_or(&TypeRange::EMPTY).to_owned();
 
         ClassTable {
             classes,
@@ -69,8 +65,6 @@ impl ClassTable {
             truth,
             lie,
             program,
-            input,
-            output
         }
     }
 

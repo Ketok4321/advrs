@@ -5,7 +5,6 @@ pub enum Expression {
     Call(Box<Expression>, String, Vec<Expression>),
     Is(Box<Expression>, String),
     Equals(Box<Expression>, Box<Expression>),
-    String(String),
 }
 
 #[derive(PartialEq, Clone, Debug)]

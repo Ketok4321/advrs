@@ -12,7 +12,6 @@ pub enum OpCode {
     Call(String, usize), // Method name and arg count
     Is(TypeRange),
     Equals,
-    Str(String),
 
     SetV(usize),
     SetF(String),
@@ -26,6 +25,7 @@ pub enum OpCode {
 pub struct CompiledMethod {
     pub name: String,
     pub body: Option<Vec<OpCode>>,
+    pub params_count: usize,
     pub locals_size: usize,
 }
 
@@ -66,9 +66,6 @@ fn compile_expr(class_table: &ClassTable, locals: &Vec<String>, expr: &Expressio
             ops.extend(compile_expr(class_table, locals, &*b));
             ops.push(Equals);
             ops
-        },
-        Expression::String(value) => {
-            vec![Str(value.to_owned())]
         },
     }
 }
@@ -129,12 +126,14 @@ fn compile_method(class_table: &ClassTable, method: &Method) -> CompiledMethod {
         CompiledMethod {
             name: method.name.to_owned(),
             body: Some(compiled_body),
+            params_count: method.params.len(),
             locals_size: locals.len(),
         }
     } else {
         CompiledMethod {
             name: method.name.to_owned(),
             body: None,
+            params_count: method.params.len(),
             locals_size: 0,
         }
     }
