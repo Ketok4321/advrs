@@ -42,7 +42,7 @@ fn main() {
             1 => panic!("No class extending program"),
             2 => table.program.0 + 1,
             _ => {
-                println!("Choose which one to run:");
+                println!("Choose which program to run:");
                 for p in table.program.0+1..table.program.1 {
                     println!("{}) {}", p - table.program.0, table.classes[p].name);
                 }
@@ -50,7 +50,7 @@ fn main() {
                 io::stdin().read_line(&mut inp).expect("Failed to read line");
                 let n = inp.trim().parse::<usize>().expect("Expected an integer");
                 assert!(n >= 1 && n < diff);
-                table.program.1 + n
+                table.program.0 + n
             }
         }
     };

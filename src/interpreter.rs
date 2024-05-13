@@ -50,6 +50,10 @@ impl Object {
     pub fn class_name(&self, class_table: &ClassTable) -> String {
         class_table.classes[self.class].name.to_owned()
     }
+    
+    pub fn is(&self, range: &TypeRange) -> bool {
+        range.matches(self.class)
+    }
 }
 
 impl std::hash::Hash for Object {
@@ -70,8 +74,8 @@ pub struct RunCtx {
 }
 
 pub fn run(ctx: &RunCtx, gc: &mut GC, full_stack: &mut [Object], method: &CompiledMethod) -> Object {
+    let (this, rest) = full_stack.split_first_mut().unwrap();
     if let Some(ops) = &method.body {
-        let (this, rest) = full_stack.split_first_mut().unwrap();
         let (vars, stack) = rest.split_at_mut(method.locals_size);
 
         let mut stack_pos = 0;
@@ -118,7 +122,7 @@ pub fn run(ctx: &RunCtx, gc: &mut GC, full_stack: &mut [Object], method: &Compil
                     push!(run(ctx, gc, &mut stack[obj_i..], method));
                 },
                 Is(range) => {
-                    push!(Object::bool(ctx, gc, range.matches(pop!().class)));
+                    push!(Object::bool(ctx, gc, pop!().is(&range)));
                 },
                 Equals => {
                     let a = pop!();
@@ -141,7 +145,7 @@ pub fn run(ctx: &RunCtx, gc: &mut GC, full_stack: &mut [Object], method: &Compil
                     return pop!();
                 },
                 Jump(expected, location) => {
-                    if !expected ^ (ctx.class_table.truth.matches(pop!().class)) {
+                    if !expected ^ (pop!().is(&ctx.class_table.truth)) {
                         i = location;
                         continue;
                     }
@@ -152,8 +156,14 @@ pub fn run(ctx: &RunCtx, gc: &mut GC, full_stack: &mut [Object], method: &Compil
             i += 1;
         }
         assert_eq!(stack_pos, 0);
-        Object::null(ctx, gc)
     } else {
-        panic!("Attempted to run a method without a body");
+        match method.name.as_str() {
+            "write" if this.is(&ctx.class_table.output) => {
+                assert_ne!(rest[0], Object::TRUE_NULL);
+                println!("{}", rest[0].class_name(&ctx.class_table));
+            },
+            _ => panic!("Attempted to run a method without a body"),
+        }
     }
+    Object::null(ctx, gc)
 }
