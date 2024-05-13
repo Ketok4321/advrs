@@ -81,6 +81,13 @@ pub fn tokenize(input: &str) -> Vec<Token> {
                 loop {
                     match iter.next() {
                         Some('\'') => break,
+                        Some('\\') => string.push(match iter.next() {
+                            Some('n') => '\n',
+                            Some('\'') => '\'',
+                            Some('\\') => '\\',
+                            Some(x) => panic!("Invalid escape sequence: '\\{x}'"),
+                            None => panic!("Expected an escape sequence, found eof"),
+                        }),
                         Some(s) => string.push(s),
                         None => panic!("Expected a single quote, found eof"),
                     }

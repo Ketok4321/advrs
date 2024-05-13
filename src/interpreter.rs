@@ -1,3 +1,5 @@
+use std::io::prelude::*;
+
 use crate::class_table::*;
 use crate::opcode::*;
 use crate::opcode::OpCode::*;
@@ -104,7 +106,7 @@ impl IOManager {
     }
 
     pub fn write_end(&mut self) {
-        println!("{}", self.write_stack);
+        std::io::stdout().write_all(self.write_stack.as_bytes()).expect("Failed to write to stdout");
         self.write_stack.clear();
     }
 
