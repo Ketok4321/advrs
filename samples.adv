@@ -1,0 +1,28 @@
+# Dependencies: core.adv, list.adv, string.adv, characters.adv
+
+class HelloWorld extends Program:
+    field output
+
+    method main():
+        this.output = Output
+        this.output.program = this
+
+        this.output.write(String.+('H').+('e').+('l').+('l').+('o').+(' ').+('w').+('o').+('r').+('l').+('d').+('!').+('\n'))
+    end
+end
+
+class Cat extends Program:
+    field input
+    field output
+
+    method main():
+        this.input = Input
+        this.output = Output
+
+        this.input.program = this
+        this.output.program = this
+
+        input = this.input.read()
+        this.output.write(input)
+    end
+end

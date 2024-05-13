@@ -1,0 +1,85 @@
+class String extends LinkedList:
+    method equals(s):
+        iter1 = this.iterate()
+        iter2 = s.iterate()
+        while iter1.continue.and(iter2.continue):
+            a = iter1.next()
+            b = iter2.next()
+
+            if a.equals(b).not():
+                return False
+            end
+        end
+        
+        if iter1.continue.or(iter2.continue): # Different length
+            return False
+        end
+
+        return True
+    end
+
+    method clone():
+        result = String
+
+        iter = this.iterate()
+        while iter.continue:
+            result.push(iter.getValue())
+            iter.next()
+        end
+
+        return result
+    end
+
+    method +(s):
+        result = this.clone()
+
+        if s is Character:
+            result.push(s)
+            return result
+        end
+
+        iter = s.iterate()
+        while iter.continue:
+            result.push(iter.getValue())
+            iter.next()
+        end
+
+        return result
+    end
+end
+
+class Input extends Object:
+    field program    
+    
+    method read():
+        result = String
+        this.program.read_start()
+
+        while True:
+            c = this.program.read_char()
+
+            if c is Null:
+                return result
+            end
+
+            result.push(c)
+        end
+    end
+end
+
+class Output extends Object:
+    field program    
+    
+    method write(text):
+        iter = text.iterate()
+        while iter.continue:
+            this.program.write_char(iter.getValue())
+            iter.next()
+        end
+        this.program.write_end()
+    end
+end
+
+class Character extends Object:
+    method equals(c)
+end

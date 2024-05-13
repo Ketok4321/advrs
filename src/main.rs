@@ -24,9 +24,11 @@ fn main() {
         },
     ];
 
-    let code = fs::read_to_string(env::args().nth(1).expect("No file provided")).expect("No such file");
+    for arg in env::args().skip(1) {
+        let code = fs::read_to_string(arg).expect("No such file");
+        classes.extend(parse(tokenize(&code)));
+    }
 
-    classes.extend(parse(tokenize(&code)));
     let table = ClassTable::create(&classes);
     let compiled = compile(&table);
     let entrypoint = {

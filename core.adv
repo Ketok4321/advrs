@@ -1,0 +1,122 @@
+class Program extends Object:
+    method main()
+
+    method write_char(c)
+    method write_end()
+
+    method read_start()
+    method read_char()
+end
+
+class Boolean extends Object:
+    method not()
+    
+    method and(b)
+    
+    method or(b)
+end
+
+class True extends Boolean:
+    method not():
+        return False
+    end
+    
+    method and(b):
+        return b
+    end
+    
+    method or(b):
+        return True
+    end
+end
+
+class False extends Boolean:
+    method not():
+        return True
+    end
+    
+    method and(b):
+        return False
+    end
+    
+    method or(b):
+        return b
+    end
+end
+
+class Number extends Object:
+    method ++()
+    
+    method --()
+    
+    method isZero()
+    
+    method toString()
+    
+    method +(n):
+        if n.isZero():
+            return this
+        end
+        return (this.++()).+(n.--())
+    end
+    
+    method -(n):
+        if n.isZero():
+            return this
+        end
+        return (this.--()).-(n.--())
+    end
+    
+    method *(n):
+        result = this.-(this)
+        while (n.isZero()).not():
+            result = result.+(this)
+            n = n.--()
+        end
+        return result
+    end
+    
+    method /(n):
+        result = this.-(this)
+        a = this
+        while (a.isZero()).not():
+            a = a.-(n)
+            result = result.++()
+        end
+        return result
+    end
+    
+    method equals(n):
+        return this.equalsStr(n.toString())
+    end
+    
+    method equalsStr(str):
+        return (this.toString()).equals(str)
+    end
+    
+    method greaterThan(n):
+        if n.isZero():
+            if this.isZero():
+                return False
+            end
+            return True
+        end
+        if this.isZero():
+            return False
+        end
+        return (this.--()).greaterThan(n.--())
+    end
+    
+    method lesserThan(n):
+        if n.isZero():
+            if this.isZero():
+                return False
+            end
+            return False
+        end
+        if this.isZero():
+            return True
+        end
+        return (this.--()).lesserThan(n.--())
+    end
+end

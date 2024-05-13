@@ -1,0 +1,218 @@
+class List extends Object:
+    method push(value)
+    method pop()
+
+    method get(index)
+    method set(index, value)
+
+    method iterate(numberImpl):
+        return UniversalIterator.new(this, numberImpl.zero())
+    end
+
+    method size(numberImpl)
+end
+
+class Iterator extends Object:
+    field continue
+
+    method next()
+
+    method getValue()
+    method setValue(value)
+end
+
+class UniversalIterator extends Iterator:
+    field _list
+    field _index
+
+    method new(list, startIndex):
+        this._list = list
+        this._index = startIndex
+        this.continue = list.size().isZero().not()
+
+        return this
+    end
+
+    method next():
+        this._index = this._index.++()
+        this.continue = this._index.equals(this._list.size()).not()
+    end
+
+    method getValue():
+        return this._list.get(this._index)
+    end
+
+    method setValue(value):
+        this._list.set(this._index, value)
+    end
+end
+
+class ArrayList extends List:
+    field array
+    field _size
+
+    method new(array, numberImpl):
+        this.array = array
+        this._size = numberImpl.zero()
+
+        return this
+    end
+
+    method push(value):
+        (this.array).set(this._size, value)
+        this._size = (this._size).++()
+    end
+
+    method pop():
+        this._size = (this._size).--()
+        return (this.array).get(this._size)
+    end
+
+    method get(index):
+        return this.array.get(index)
+    end
+
+    method set(index, value):
+        this.array.set(index, value)
+    end
+
+    method size(numberImpl):
+        return this._size
+    end
+end
+
+class LinkedList extends List:
+    field _first
+    field _last
+
+    method push(value):
+        cell = _LinkedList_Cell
+        cell.value = value
+        cell.prev = this._last
+        
+        if (this._last) is _LinkedList_Cell: # (non-null check)
+            this._last.next = cell
+        end
+
+        this._last = cell
+        if (this._first) is Null:
+            this._first = cell
+        end
+    end
+
+    method pop():
+        old = this._last
+        this._last = old.prev
+
+        if (this._last) is _LinkedList_Cell:
+            this._last.next = Null
+        end
+
+        if (this._first) = old:
+            this._first = Null
+        end
+
+        return old.value
+    end
+
+    method pushStart(value):
+        cell = _LinkedList_Cell
+        cell.value = value
+        cell.next = this._first
+        
+        if (this._first) is _LinkedList_Cell: # (non-null check)
+            this._first.prev = cell
+        end
+
+        this._first = cell
+        if (this._last) is Null:
+            this._last = cell
+        end
+    end
+
+    method popStart():
+        old = this._first
+        this._first = old.next
+
+        if (this._first) is _LinkedList_Cell:
+            this._first.prev = Null
+        end
+
+        if (this._last) = old:
+            this._last = Null
+        end
+
+        return old.value
+    end
+
+    method _getCell(index):
+        cell = this._first
+        while index.isZero().not():
+            cell = cell.next
+            index = index.--()
+        end
+
+        return cell
+    end
+
+    method get(index):
+        return (this._getCell(index)).value
+    end
+
+    method set(index, value):
+        (this._getCell(index)).value = value
+    end
+
+    method iterate():
+        return LinkedListIterator.new(this)
+    end
+
+    method size(numberImpl):
+        res = numberImpl.zero()
+        cell = this._first
+        while cell is _LinkedList_Cell:
+            cell = cell.next
+            res = res.++()
+        end
+
+        return res
+    end
+
+    method first():
+        return this._first.value
+    end
+
+    method last():
+        return this._last.value
+    end
+end
+
+class _LinkedList_Cell extends Object:
+    field value
+    field prev
+    field next
+end
+
+class LinkedListIterator extends Iterator:
+    field _cell
+
+    method new(list):
+        this._cell = list._first
+        this.continue = (this._cell) is _LinkedList_Cell
+
+        return this
+    end
+
+    method next():
+        this._cell = this._cell.next
+        this.continue = (this._cell) is _LinkedList_Cell
+    end
+
+    method getValue():
+        return this._cell.value
+    end
+
+    method setValue(value):
+        this._cell.value = value
+    end
+end

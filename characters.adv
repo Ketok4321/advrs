@@ -1,0 +1,575 @@
+class ' ' extends Character:
+    method equals(c):
+        return c is ' '
+    end
+end
+
+class '!' extends Character:
+    method equals(c):
+        return c is '!'
+    end
+end
+
+class '"' extends Character:
+    method equals(c):
+        return c is '"'
+    end
+end
+
+class '#' extends Character:
+    method equals(c):
+        return c is '#'
+    end
+end
+
+class '$' extends Character:
+    method equals(c):
+        return c is '$'
+    end
+end
+
+class '%' extends Character:
+    method equals(c):
+        return c is '%'
+    end
+end
+
+class '&' extends Character:
+    method equals(c):
+        return c is '&'
+    end
+end
+
+class '\'' extends Character:
+    method equals(c):
+        return c is '\''
+    end
+end
+
+class '(' extends Character:
+    method equals(c):
+        return c is '('
+    end
+end
+
+class ')' extends Character:
+    method equals(c):
+        return c is ')'
+    end
+end
+
+class '*' extends Character:
+    method equals(c):
+        return c is '*'
+    end
+end
+
+class '+' extends Character:
+    method equals(c):
+        return c is '+'
+    end
+end
+
+class ',' extends Character:
+    method equals(c):
+        return c is ','
+    end
+end
+
+class '-' extends Character:
+    method equals(c):
+        return c is '-'
+    end
+end
+
+class '.' extends Character:
+    method equals(c):
+        return c is '.'
+    end
+end
+
+class '/' extends Character:
+    method equals(c):
+        return c is '/'
+    end
+end
+
+class '0' extends Character:
+    method equals(c):
+        return c is '0'
+    end
+end
+
+class '1' extends Character:
+    method equals(c):
+        return c is '1'
+    end
+end
+
+class '2' extends Character:
+    method equals(c):
+        return c is '2'
+    end
+end
+
+class '3' extends Character:
+    method equals(c):
+        return c is '3'
+    end
+end
+
+class '4' extends Character:
+    method equals(c):
+        return c is '4'
+    end
+end
+
+class '5' extends Character:
+    method equals(c):
+        return c is '5'
+    end
+end
+
+class '6' extends Character:
+    method equals(c):
+        return c is '6'
+    end
+end
+
+class '7' extends Character:
+    method equals(c):
+        return c is '7'
+    end
+end
+
+class '8' extends Character:
+    method equals(c):
+        return c is '8'
+    end
+end
+
+class '9' extends Character:
+    method equals(c):
+        return c is '9'
+    end
+end
+
+class ':' extends Character:
+    method equals(c):
+        return c is ':'
+    end
+end
+
+class ';' extends Character:
+    method equals(c):
+        return c is ';'
+    end
+end
+
+class '<' extends Character:
+    method equals(c):
+        return c is '<'
+    end
+end
+
+class '=' extends Character:
+    method equals(c):
+        return c is '='
+    end
+end
+
+class '>' extends Character:
+    method equals(c):
+        return c is '>'
+    end
+end
+
+class '?' extends Character:
+    method equals(c):
+        return c is '?'
+    end
+end
+
+class '@' extends Character:
+    method equals(c):
+        return c is '@'
+    end
+end
+
+class 'A' extends Character:
+    method equals(c):
+        return c is 'A'
+    end
+end
+
+class 'B' extends Character:
+    method equals(c):
+        return c is 'B'
+    end
+end
+
+class 'C' extends Character:
+    method equals(c):
+        return c is 'C'
+    end
+end
+
+class 'D' extends Character:
+    method equals(c):
+        return c is 'D'
+    end
+end
+
+class 'E' extends Character:
+    method equals(c):
+        return c is 'E'
+    end
+end
+
+class 'F' extends Character:
+    method equals(c):
+        return c is 'F'
+    end
+end
+
+class 'G' extends Character:
+    method equals(c):
+        return c is 'G'
+    end
+end
+
+class 'H' extends Character:
+    method equals(c):
+        return c is 'H'
+    end
+end
+
+class 'I' extends Character:
+    method equals(c):
+        return c is 'I'
+    end
+end
+
+class 'J' extends Character:
+    method equals(c):
+        return c is 'J'
+    end
+end
+
+class 'K' extends Character:
+    method equals(c):
+        return c is 'K'
+    end
+end
+
+class 'L' extends Character:
+    method equals(c):
+        return c is 'L'
+    end
+end
+
+class 'M' extends Character:
+    method equals(c):
+        return c is 'M'
+    end
+end
+
+class 'N' extends Character:
+    method equals(c):
+        return c is 'N'
+    end
+end
+
+class 'O' extends Character:
+    method equals(c):
+        return c is 'O'
+    end
+end
+
+class 'P' extends Character:
+    method equals(c):
+        return c is 'P'
+    end
+end
+
+class 'Q' extends Character:
+    method equals(c):
+        return c is 'Q'
+    end
+end
+
+class 'R' extends Character:
+    method equals(c):
+        return c is 'R'
+    end
+end
+
+class 'S' extends Character:
+    method equals(c):
+        return c is 'S'
+    end
+end
+
+class 'T' extends Character:
+    method equals(c):
+        return c is 'T'
+    end
+end
+
+class 'U' extends Character:
+    method equals(c):
+        return c is 'U'
+    end
+end
+
+class 'V' extends Character:
+    method equals(c):
+        return c is 'V'
+    end
+end
+
+class 'W' extends Character:
+    method equals(c):
+        return c is 'W'
+    end
+end
+
+class 'X' extends Character:
+    method equals(c):
+        return c is 'X'
+    end
+end
+
+class 'Y' extends Character:
+    method equals(c):
+        return c is 'Y'
+    end
+end
+
+class 'Z' extends Character:
+    method equals(c):
+        return c is 'Z'
+    end
+end
+
+class '[' extends Character:
+    method equals(c):
+        return c is '['
+    end
+end
+
+class '\\' extends Character:
+    method equals(c):
+        return c is '\\'
+    end
+end
+
+class ']' extends Character:
+    method equals(c):
+        return c is ']'
+    end
+end
+
+class '^' extends Character:
+    method equals(c):
+        return c is '^'
+    end
+end
+
+class '_' extends Character:
+    method equals(c):
+        return c is '_'
+    end
+end
+
+class '`' extends Character:
+    method equals(c):
+        return c is '`'
+    end
+end
+
+class 'a' extends Character:
+    method equals(c):
+        return c is 'a'
+    end
+end
+
+class 'b' extends Character:
+    method equals(c):
+        return c is 'b'
+    end
+end
+
+class 'c' extends Character:
+    method equals(c):
+        return c is 'c'
+    end
+end
+
+class 'd' extends Character:
+    method equals(c):
+        return c is 'd'
+    end
+end
+
+class 'e' extends Character:
+    method equals(c):
+        return c is 'e'
+    end
+end
+
+class 'f' extends Character:
+    method equals(c):
+        return c is 'f'
+    end
+end
+
+class 'g' extends Character:
+    method equals(c):
+        return c is 'g'
+    end
+end
+
+class 'h' extends Character:
+    method equals(c):
+        return c is 'h'
+    end
+end
+
+class 'i' extends Character:
+    method equals(c):
+        return c is 'i'
+    end
+end
+
+class 'j' extends Character:
+    method equals(c):
+        return c is 'j'
+    end
+end
+
+class 'k' extends Character:
+    method equals(c):
+        return c is 'k'
+    end
+end
+
+class 'l' extends Character:
+    method equals(c):
+        return c is 'l'
+    end
+end
+
+class 'm' extends Character:
+    method equals(c):
+        return c is 'm'
+    end
+end
+
+class 'n' extends Character:
+    method equals(c):
+        return c is 'n'
+    end
+end
+
+class 'o' extends Character:
+    method equals(c):
+        return c is 'o'
+    end
+end
+
+class 'p' extends Character:
+    method equals(c):
+        return c is 'p'
+    end
+end
+
+class 'q' extends Character:
+    method equals(c):
+        return c is 'q'
+    end
+end
+
+class 'r' extends Character:
+    method equals(c):
+        return c is 'r'
+    end
+end
+
+class 's' extends Character:
+    method equals(c):
+        return c is 's'
+    end
+end
+
+class 't' extends Character:
+    method equals(c):
+        return c is 't'
+    end
+end
+
+class 'u' extends Character:
+    method equals(c):
+        return c is 'u'
+    end
+end
+
+class 'v' extends Character:
+    method equals(c):
+        return c is 'v'
+    end
+end
+
+class 'w' extends Character:
+    method equals(c):
+        return c is 'w'
+    end
+end
+
+class 'x' extends Character:
+    method equals(c):
+        return c is 'x'
+    end
+end
+
+class 'y' extends Character:
+    method equals(c):
+        return c is 'y'
+    end
+end
+
+class 'z' extends Character:
+    method equals(c):
+        return c is 'z'
+    end
+end
+
+class '{' extends Character:
+    method equals(c):
+        return c is '{'
+    end
+end
+
+class '|' extends Character:
+    method equals(c):
+        return c is '|'
+    end
+end
+
+class '}' extends Character:
+    method equals(c):
+        return c is '}'
+    end
+end
+
+class '~' extends Character:
+    method equals(c):
+        return c is '~'
+    end
+end
+
+class '\n' extends Character:
+    method equals(c):
+        return c is '\n'
+    end
+end
