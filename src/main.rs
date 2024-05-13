@@ -48,14 +48,10 @@ fn main() {
             }
         }
     };
-    let ctx = RunCtx {
-        class_table: table,
-        classes: compiled,
-    };
-
     let mut stack = vec![Object::TRUE_NULL; 8192];
     let mut gc = GC::new(&stack[..] as *const [Object], 4096);
-    stack[0] = Object::new(&ctx, &mut gc, entrypoint);
+    let ctx = RunCtx::new(&mut gc, table, compiled, entrypoint);
+    stack[0] = ctx.program_obj;
 
     let res = run(&ctx, &mut gc, &mut IOManager::new(), &mut stack, ctx.classes[entrypoint].methods.iter().find(|m| m.name == "main").unwrap());
 

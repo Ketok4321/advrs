@@ -71,6 +71,19 @@ impl PartialEq for Object {
 pub struct RunCtx {
     pub class_table: ClassTable,
     pub classes: Vec<CompiledClass>,
+    pub program_obj: Object,
+}
+
+impl RunCtx {
+    pub fn new(gc: &mut GC, class_table: ClassTable, classes: Vec<CompiledClass>, program_class: usize) -> Self {
+        let mut result = Self {
+            class_table,
+            classes,
+            program_obj: Object::TRUE_NULL,
+        };
+        result.program_obj = Object::new(&result, gc, program_class);
+        result
+    }
 }
 
 pub struct IOManager {
@@ -191,18 +204,22 @@ pub fn run(ctx: &RunCtx, gc: &mut GC, io: &mut IOManager, full_stack: &mut [Obje
         assert_eq!(stack_pos, 0);
     } else {
         match method.name.as_str() {
-            "write_char" if this.is(&ctx.class_table.program) => {
+            "write_char" => {
+                assert_eq!(*this, ctx.program_obj);
                 let char = rest[0].class_name(&ctx.class_table);
                 assert!(char.len() == 1);
                 io.write_char(char.chars().nth(0).unwrap());
             },
             "write_end" if this.is(&ctx.class_table.program) => {
+                assert_eq!(*this, ctx.program_obj);
                 io.write_end();
             },
             "read_start" if this.is(&ctx.class_table.program) => {
+                assert_eq!(*this, ctx.program_obj);
                 io.read_start();
             },
             "read_char" if this.is(&ctx.class_table.program) => {
+                assert_eq!(*this, ctx.program_obj);
                 if let Some(c) = io.read_char() {
                     if let Some(class) = ctx.class_table.map.get(&c.to_string()) {
                         return Object::new_r(ctx, gc, *class);
