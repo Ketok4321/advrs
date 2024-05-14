@@ -171,14 +171,36 @@ pub fn parse_class(iter: &mut Peekable<Iter<Token>>) -> Class {
     }
 }
 
-pub fn parse(tokens: Vec<Token>) -> Vec<Class> {
+pub fn parse_metadata(iter: &mut Peekable<Iter<Token>>) -> Metadata {
+    let mut result = Metadata::default();
+
+    loop {
+        match iter.peek().map(|t| &t.kind) {
+            Some(TK::Identifier(name)) => {
+                _ = iter.next();
+                require!(iter.next(), TK::BlockStart);
+                match name.as_str() {
+                    "target" => result.target = require_identifier!(iter.next()).to_owned(),
+                    "import" => result.dependencies = parse_list(iter, |iter| require_identifier!(iter.next()).to_owned()),
+                    "entrypoint" => result.entrypoint = Some(require_identifier!(iter.next()).to_owned()),
+                    x => panic!("{x} is not a valid metadata entry"),
+                }
+            },
+            _ => return result
+        }
+    }
+}
+
+pub fn parse(tokens: Vec<Token>) -> (Metadata, Vec<Class>) {
     let mut iter = tokens.iter().peekable();
 
+    let metadata = parse_metadata(&mut iter);
+    assert_eq!(metadata.target, CURRENT_VERSION, "Incompatible version! (program targets '{}', running '{}')", metadata.target, CURRENT_VERSION);
     let mut classes = Vec::new();
 
     while iter.peek() != None {
         classes.push(parse_class(&mut iter));
     }
 
-    classes
+    (metadata, classes)
 }

@@ -1,4 +1,4 @@
-use std::{fs, env, io};
+use std::{io, env, path, fs};
 
 use advrs::lexer::*;
 use advrs::syntax::*;
@@ -24,29 +24,38 @@ fn main() {
         },
     ];
 
-    for arg in env::args().skip(1) {
-        let code = fs::read_to_string(arg).expect("No such file");
-        classes.extend(parse(tokenize(&code)));
+    let path = env::args().nth(1).expect("Usage: adv [file path]");
+
+    let (metadata, pclasses) = parse(tokenize(&fs::read_to_string(path.as_str()).expect("No such file")));
+    classes.extend(pclasses);
+
+    for dep in metadata.dependencies {
+        let (_, pclasses) = parse(tokenize(&fs::read_to_string(path::Path::new(path.as_str()).parent().unwrap().join(dep)).expect("No such file")));
+        classes.extend(pclasses);
     }
 
     let table = ClassTable::create(&classes);
     let compiled = compile(&table);
     let entrypoint = {
-        let diff = table.program.1 - table.program.0;
-        match diff {
-            0 => panic!("Program class not defined"),
-            1 => panic!("No class extending program"),
-            2 => table.program.0 + 1,
-            _ => {
-                println!("Choose which program to run:");
-                for p in table.program.0+1..table.program.1 {
-                    println!("{}) {}", p - table.program.0, table.classes[p].name);
+        if let Some(entry_name) = metadata.entrypoint {
+            table.map.get(&entry_name).unwrap().0
+        } else {
+            let diff = table.program.1 - table.program.0;
+            match diff {
+                0 => panic!("Program class not defined"),
+                1 => panic!("No class extending program"),
+                2 => table.program.0 + 1,
+                _ => {
+                    println!("Choose which program to run:");
+                    for p in table.program.0+1..table.program.1 {
+                        println!("{}) {}", p - table.program.0, table.classes[p].name);
+                    }
+                    let mut inp = String::new();
+                    io::stdin().read_line(&mut inp).expect("Failed to read line");
+                    let n = inp.trim().parse::<usize>().expect("Expected an integer");
+                    assert!(n >= 1 && n < diff);
+                    table.program.0 + n
                 }
-                let mut inp = String::new();
-                io::stdin().read_line(&mut inp).expect("Failed to read line");
-                let n = inp.trim().parse::<usize>().expect("Expected an integer");
-                assert!(n >= 1 && n < diff);
-                table.program.0 + n
             }
         }
     };

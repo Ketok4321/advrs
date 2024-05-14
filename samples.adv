@@ -1,4 +1,5 @@
-# Dependencies: core.adv, list.adv, string.adv, characters.adv
+target: 'indev'
+import: ('core.adv', 'list.adv', 'string.adv', 'characters.adv')
 
 class HelloWorld extends Program:
     field output
