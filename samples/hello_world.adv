@@ -1,0 +1,14 @@
+target: 'indev'
+import: ('hiv/core.adv', 'hiv/list.adv', 'hiv/string.adv', 'hiv/generated/characters.adv')
+entrypoint: HelloWorld
+
+class HelloWorld extends Program:
+    field output
+
+    method main():
+        this.output = Output
+        this.output.program = this
+
+        this.output.write(String.+('H').+('e').+('l').+('l').+('o').+(' ').+('w').+('o').+('r').+('l').+('d').+('!').+('\n'))
+    end
+end

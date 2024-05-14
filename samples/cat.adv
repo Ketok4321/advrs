@@ -1,0 +1,19 @@
+target: 'indev'
+import: ('hiv/core.adv', 'hiv/list.adv', 'hiv/string.adv', 'hiv/generated/characters.adv')
+entrypoint: Cat
+
+class Cat extends Program:
+    field input
+    field output
+
+    method main():
+        this.input = Input
+        this.output = Output
+
+        this.input.program = this
+        this.output.program = this
+
+        input = this.input.read()
+        this.output.write(input)
+    end
+end

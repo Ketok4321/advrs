@@ -44,6 +44,11 @@ class False extends Boolean:
     end
 end
 
+class NumberImplementation extends Object:
+    method zero()
+    method fromString(s)
+end
+
 class Number extends Object:
     method ++()
     

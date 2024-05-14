@@ -5,11 +5,11 @@ class List extends Object:
     method get(index)
     method set(index, value)
 
+    method size(numberImpl)
+
     method iterate(numberImpl):
         return UniversalIterator.new(this, numberImpl.zero())
     end
-
-    method size(numberImpl)
 end
 
 class Iterator extends Object:
@@ -163,10 +163,6 @@ class LinkedList extends List:
         (this._getCell(index)).value = value
     end
 
-    method iterate():
-        return LinkedListIterator.new(this)
-    end
-
     method size(numberImpl):
         res = numberImpl.zero()
         cell = this._first
@@ -176,6 +172,33 @@ class LinkedList extends List:
         end
 
         return res
+    end
+
+    method iterate(numberImpl):
+        return this.iterateNumless()
+    end
+
+    method iterateNumless():
+        return LinkedListIterator.new(this)
+    end
+
+    method equals(other):
+        iter1 = this.iterateNumless()
+        iter2 = other.iterateNumless()
+        while iter1.continue.and(iter2.continue):
+            a = iter1.next()
+            b = iter2.next()
+
+            if a.equals(b).not():
+                return False
+            end
+        end
+        
+        if iter1.continue.or(iter2.continue): # Different length
+            return False
+        end
+
+        return True
     end
 
     method first():
