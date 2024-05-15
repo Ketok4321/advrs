@@ -1,5 +1,7 @@
 use std::collections::HashMap;
 
+use anyhow::{Result, Context};
+
 use crate::syntax::*;
 
 #[derive(PartialEq, Clone, Copy, Debug)]
@@ -68,11 +70,11 @@ impl ClassTable {
         }
     }
 
-    pub fn get_class(&self, name: &String) -> Option<&Class> {
-        if let Some(range) = self.map.get(name) {
-            Some(&self.classes[range.0])
-        } else {
-            None
-        }
+    pub fn get_class_id(&self, name: &str) -> Result<usize> {
+        Ok(self.map.get(name).with_context(|| format!("Couldn't find a class named {}", name))?.0)
+    }
+
+    pub fn get_class(&self, name: &str) -> Result<&Class> {
+        self.get_class_id(name).map(|i| &self.classes[i])
     }
 }

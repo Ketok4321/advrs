@@ -1,3 +1,5 @@
+use anyhow::{Result, Context, bail};
+
 use self::TokenKind::*;
 
 #[derive(PartialEq, Clone, Debug)]
@@ -37,14 +39,36 @@ fn is_allowed_in_idents(c: char) -> bool {
     }
 }
 
-pub fn tokenize(input: &str) -> Vec<Token> {
+pub fn tokenize(file_name: &str, input: &str) -> Result<Vec<Token>> {
     let mut result = Vec::new();
     let mut iter = input.chars().peekable();
 
     let mut line = 1;
     let mut column = 1;
 
-    while let Some(c) = iter.next() {
+    macro_rules! next {
+        () => {
+            if let Some(c) = iter.next() {
+                if c == '\n' {
+                    line += 1;
+                    column = 1;
+                } else {
+                    column += 1;
+                }
+                Some(c)
+            } else {
+                None
+            }
+        }
+    }
+
+    macro_rules! require_next {
+        () => {
+            next!().with_context(|| "{file_name}:{line}:{column}: Unexpected end of file")?
+        }
+    }
+
+    while let Some(c) = next!() {
         let maybe_kind = match c {
             ':' => Some(BlockStart),
             '.' => Some(Dot),
@@ -56,12 +80,12 @@ pub fn tokenize(input: &str) -> Vec<Token> {
                 let mut string = i.to_string();
                 loop {
                     match iter.peek() {
-                        Some(s) if is_allowed_in_idents(*s) => { 
-                            string.push(*s);
+                        Some(&s) if is_allowed_in_idents(s) => { 
+                            next!();
+                            string.push(s);
                         },
                         _ => break,
                     }
-                    _ = iter.next();
                 }
                 Some(match &*string {
                     "end" => BlockEnd,
@@ -79,41 +103,33 @@ pub fn tokenize(input: &str) -> Vec<Token> {
             '\'' => {
                 let mut string = String::new();
                 loop {
-                    match iter.next() {
-                        Some('\'') => break,
-                        Some('\\') => string.push(match iter.next() {
-                            Some('n') => '\n',
-                            Some('\'') => '\'',
-                            Some('\\') => '\\',
-                            Some(x) => panic!("Invalid escape sequence: '\\{x}'"),
-                            None => panic!("Expected an escape sequence, found eof"),
+                    match require_next!() {
+                        '\'' => break,
+                        '\\' => string.push(match require_next!() {
+                            'n' => '\n',
+                            '\'' => '\'',
+                            '\\' => '\\',
+                            x => bail!("{file_name}:{line}:{column}: Invalid escape sequence: '\\{x}'"),
                         }),
-                        Some(s) => string.push(s),
-                        None => panic!("Expected a single quote, found eof"),
+                        s => string.push(s),
                     }
                 }
                 Some(Identifier(string))
             },
             '#' => {
                 while iter.peek() != Some(&'\n') && iter.peek() != None {
-                    _ = iter.next();
+                    next!();
                 }
                 None
             },
-            '\n' => {
-                line += 1;
-                column = 0;
-                None
-            },
             w if w.is_whitespace() => None,
-            c => panic!("Unexpected '{c}' character at {line}:{column}"),
+            c => bail!("{file_name}:{line}:{column}: Unexpected '{c}' character"),
         };
 
         if let Some(kind) = maybe_kind {
             result.push(Token { kind, line, column })
         }
-        column += 1;
     }
 
-    result
+    Ok(result)
 }
