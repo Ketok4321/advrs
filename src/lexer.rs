@@ -114,7 +114,11 @@ pub fn tokenize(file_name: &str, input: &str) -> Result<Vec<Token>> {
                         s => string.push(s),
                     }
                 }
-                Some(Identifier(string))
+                if string.len() == 1 {
+                    Some(Identifier(format!("'{string}'")))
+                } else {
+                    Some(Identifier(string))
+                }
             },
             '#' => {
                 while iter.peek() != Some(&'\n') && iter.peek() != None {

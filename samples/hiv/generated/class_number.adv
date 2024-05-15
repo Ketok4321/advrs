@@ -2,10 +2,6 @@ class ClassNumberImplementation extends NumberImplementation:
     method zero():
         return 0
     end
-    
-    method fromString(s):
-        return Mirror.instantiate(s)
-    end
 end
 
 class ClassNumber extends Number:

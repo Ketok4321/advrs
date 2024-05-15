@@ -208,8 +208,9 @@ pub fn run(ctx: &RunCtx, gc: &mut GC, io: &mut IOManager, full_stack: &mut [Obje
         match method.name.as_str() {
             "write_char" => {
                 assert_eq!(*this, ctx.program_obj);
-                let char = rest[0].class_name(&ctx.class_table);
-                assert!(char.len() == 1);
+                let class_name = rest[0].class_name(&ctx.class_table);
+                let char = class_name.strip_prefix('\'').unwrap().strip_suffix('\'').unwrap();
+                assert_eq!(char.len(), 1);
                 io.write_char(char.chars().nth(0).unwrap());
             },
             "write_end" if this.is(&ctx.class_table.program) => {
@@ -223,7 +224,7 @@ pub fn run(ctx: &RunCtx, gc: &mut GC, io: &mut IOManager, full_stack: &mut [Obje
             "read_char" if this.is(&ctx.class_table.program) => {
                 assert_eq!(*this, ctx.program_obj);
                 if let Some(c) = io.read_char() {
-                    if let Some(class) = ctx.class_table.map.get(&c.to_string()) {
+                    if let Some(class) = ctx.class_table.map.get(&format!("'{c}'")) {
                         return Object::new_r(ctx, gc, *class);
                     } else {
                         return Object::null(ctx, gc);
