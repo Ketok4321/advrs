@@ -51,7 +51,7 @@ pub fn tokenize(file_name: &str, input: &str) -> Result<Vec<Token>> {
             if let Some(c) = iter.next() {
                 if c == '\n' {
                     line += 1;
-                    column = 1;
+                    column = 0;
                 } else {
                     column += 1;
                 }

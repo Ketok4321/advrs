@@ -1,206 +1,233 @@
-use crate::syntax::*;
-use crate::lexer::*;
-use crate::lexer::TokenKind as TK;
-
 use std::slice::Iter;
 use std::iter::Peekable;
 
+use anyhow::{Result, bail, ensure};
+
+use crate::syntax::*;
+use crate::lexer::*;
+
 macro_rules! pmatch {
-    ($expr:expr, $( $pat:pat => $expr2:expr ),* $(,)?) => {
-        match $expr {
-            $( Some(Token { kind: $pat, .. }) => $expr2, )*
-            None => panic!("Expected a token, found eof"),
+    ($ctx:expr, $( $kind:ident => $kind_expr:expr ),* $(,)?) => {
+        match $ctx.iter.next() {
+            $( Some(Token { kind: TokenKind::$kind, .. }) => $kind_expr, )*
+            None => bail!("{}: Expected a token, found eof", $ctx.file_name),
             Some(Token { line, column, kind }) => {
-                panic!("Line {}, column {}:\nExpected one of: {}\nGot: {:?}", line, column, stringify!($($pat),*), kind);
-            }
+                bail!("{}:{}:{}: Expected one of: {}; Got: {:?}", $ctx.file_name, line, column, stringify!($($kind),*), kind); // TODO: Show filename here
+            },
+        }
+    };
+    ($ctx:expr, Identifier($name:ident) => $ident_expr:expr, $( $kind:ident => $kind_expr:expr ),* $(,)?) => {
+        match $ctx.iter.next() {
+            Some(Token { kind: TokenKind::Identifier($name), .. }) => $ident_expr,
+            $( Some(Token { kind: TokenKind::$kind, .. }) => $kind_expr, )*
+            None => bail!("{}: Expected a token, found eof", $ctx.file_name),
+            Some(Token { line, column, kind }) => {
+                bail!("{}:{}:{}: Expected one of: Indentifier, {}; Got: {:?}", $ctx.file_name, line, column, stringify!($($kind),*), kind); // TODO: Show filename here
+            },
         }
     };
 }
 
-macro_rules! require {
-    ($token:expr, $pat:pat) => {
-        pmatch!($token,
+macro_rules! pmatch_maybe {
+    ($expr:expr, $( $pat:pat => $expr2:expr ),* $(,)?) => {
+        match $expr.map(|t| &t.kind) {
+            $( $pat => $expr2, )*
+        }
+    };
+}
+
+macro_rules! expect {
+    ($ctx:expr, $pat:ident) => {
+        pmatch!($ctx,
             $pat => (),
         );
     }
 }
 
-macro_rules! require_identifier {
-    ($token:expr) => {
-        pmatch!($token,
-            TK::Identifier(name) => name,
+macro_rules! expect_identifier {
+    ($ctx:expr) => {
+        pmatch!($ctx,
+            Identifier(name) => name,
         )
     }
 }
 
 macro_rules! is {
-    ($token:expr, $kind:pat) => {
-        matches!($token, Some(Token { kind: $kind, .. }))
+    ($token:expr, $kind:ident) => {
+        matches!($token, Some(Token { kind: TokenKind::$kind, .. }))
     }
 }
 
-fn parse_list<T>(iter: &mut Peekable<Iter<Token>>, parser: fn(&mut Peekable<Iter<Token>>) -> T) -> Vec<T> {
-    require!(iter.next(), TK::OpeningParens);
+struct ParseCtx<'a> {
+    pub iter: Peekable<Iter<'a, Token>>,
+    pub file_name: &'a str,
+}
+
+fn parse_list<T>(ctx: &mut ParseCtx, parser: fn(&mut ParseCtx) -> Result<T>) -> Result<Vec<T>> {
+    expect!(ctx, OpeningParens);
     let mut elements = Vec::new();
-    if iter.next_if(|t| t.kind == TK::ClosingParens) == None {
+    if ctx.iter.next_if(|t| t.kind == TokenKind::ClosingParens) == None {
         loop {
-            elements.push(parser(iter));
-            pmatch!(iter.next(),
-                TK::Comma => (),
-                TK::ClosingParens => break,
+            elements.push(parser(ctx)?);
+            pmatch!(ctx,
+                Comma => (),
+                ClosingParens => break,
             );
         }
     }
 
-    elements
+    Ok(elements)
 }
 
-pub fn parse_expression(iter: &mut Peekable<Iter<Token>>) -> Expression {
-    pmatch!(iter.next(),
-        TK::Identifier(name) => parse_expression_further(iter, Expression::Get(name.to_owned())),
-        TK::OpeningParens => {
-            let result = parse_expression(iter);
-            require!(iter.next(), TK::ClosingParens);
-            parse_expression_further(iter, result)
+fn parse_expression(ctx: &mut ParseCtx) -> Result<Expression> {
+    pmatch!(ctx,
+        Identifier(name) => parse_expression_further(ctx, Expression::Get(name.to_owned())),
+        OpeningParens => {
+            let result = parse_expression(ctx)?;
+            expect!(ctx, ClosingParens);
+            parse_expression_further(ctx, result)
         },
     )
 }
 
-fn parse_expression_further(iter: &mut Peekable<Iter<Token>>, expr: Expression) -> Expression {
-    match iter.peek().map(|t| &t.kind) {
-        Some(TK::Dot) => {
-            _ = iter.next();
-            let name = require_identifier!(iter.next());
-            if let Some(TK::OpeningParens) = iter.peek().map(|t| &t.kind) {
-                let args = parse_list(iter, parse_expression);
-                parse_expression_further(iter, Expression::Call(Box::new(expr), name.to_owned(), args))
+fn parse_expression_further(ctx: &mut ParseCtx, expr: Expression) -> Result<Expression> {
+    pmatch_maybe!(ctx.iter.peek(), 
+        Some(TokenKind::Dot) => {
+            ctx.iter.next();
+            let name = expect_identifier!(ctx);
+            if let Some(TokenKind::OpeningParens) = ctx.iter.peek().map(|t| &t.kind) {
+                let args = parse_list(ctx, parse_expression)?;
+                parse_expression_further(ctx, Expression::Call(Box::new(expr), name.to_owned(), args))
             } else {
-                parse_expression_further(iter, Expression::GetF(Box::new(expr), name.to_owned()))
+                parse_expression_further(ctx, Expression::GetF(Box::new(expr), name.to_owned()))
             }
         },
-        Some(TK::Is) => {
-            _ = iter.next();
-            let name = require_identifier!(iter.next());
-            parse_expression_further(iter, Expression::Is(Box::new(expr), name.to_owned()))
+        Some(TokenKind::Is) => {
+            ctx.iter.next();
+            let name = expect_identifier!(ctx);
+            parse_expression_further(ctx, Expression::Is(Box::new(expr), name.to_owned()))
         },
-        Some(TK::EqualsSign) => {
-            _ = iter.next();
-            Expression::Equals(Box::new(expr), Box::new(parse_expression(iter)))
+        Some(TokenKind::EqualsSign) => {
+            ctx.iter.next();
+            Ok(Expression::Equals(Box::new(expr), Box::new(parse_expression(ctx)?)))
         },
-        _ => expr
-    }
+        _ => Ok(expr)
+    )
 }
 
-pub fn parse_statement(iter: &mut Peekable<Iter<Token>>) -> Statement {
-    match iter.peek().map(|t| &t.kind) {
-        Some(TK::Return) => {
-            _ = iter.next();
-            Statement::Return(parse_expression(iter))
+fn parse_statement(ctx: &mut ParseCtx) -> Result<Statement> {
+    Ok(pmatch_maybe!(ctx.iter.peek(),
+        Some(TokenKind::Return) => {
+            ctx.iter.next();
+            Statement::Return(parse_expression(ctx)?)
         },
-        Some(TK::If) => {
-            _ = iter.next();
-            Statement::If(parse_expression(iter), parse_block(iter))
+        Some(TokenKind::If) => {
+            ctx.iter.next();
+            Statement::If(parse_expression(ctx)?, parse_block(ctx)?)
         },
-        Some(TK::While) => {
-            _ = iter.next();
-            Statement::While(parse_expression(iter), parse_block(iter))
+        Some(TokenKind::While) => {
+            _ = ctx.iter.next();
+            Statement::While(parse_expression(ctx)?, parse_block(ctx)?)
         },
         _ => {
-            let expr = parse_expression(iter);
+            let expr = parse_expression(ctx)?;
             match expr {
                 Expression::Equals(a, b) => match *a {
                     Expression::Get(var) => Statement::SetV(var, *b),
                     Expression::GetF(obj, field) => Statement::SetF(*obj, field, *b),
-                    _ => panic!("You can't just set a random expression lol"),
+                    _ => bail!("You can't just set a random expression lol"),
                 },
                 Expression::Call(obj, method, args) => Statement::Call(*obj, method, args),
-                _ => panic!("Expected a statement, got an expression instead"),
+                _ => bail!("Expected a statement, got an expression instead"),
             }
         }
-    }
+    ))
 }
 
-pub fn parse_block(iter: &mut Peekable<Iter<Token>>) -> Vec<Statement> {
+fn parse_block(ctx: &mut ParseCtx) -> Result<Vec<Statement>> {
     let mut result = Vec::new();
     
-    require!(iter.next(), TK::BlockStart);
-    while iter.next_if(|t| t.kind == TK::BlockEnd) == None {
-        result.push(parse_statement(iter));
+    expect!(ctx, BlockStart);
+    while ctx.iter.next_if(|t| t.kind == TokenKind::BlockEnd) == None {
+        result.push(parse_statement(ctx)?);
     }
 
-    result
+    Ok(result)
 }
 
-pub fn parse_class(iter: &mut Peekable<Iter<Token>>) -> Class {
-    require!(iter.next(), TK::Class);
-    let name = require_identifier!(iter.next());
-    require!(iter.next(), TK::Extends);
-    let parent = require_identifier!(iter.next());
-    require!(iter.next(), TK::BlockStart);
+fn parse_class(ctx: &mut ParseCtx) -> Result<Class> {
+    expect!(ctx, Class);
+    let name = expect_identifier!(ctx);
+    expect!(ctx, Extends);
+    let parent = expect_identifier!(ctx);
+    expect!(ctx, BlockStart);
     
     let mut fields = Vec::new();
     let mut methods = Vec::new();
 
     loop {
-        pmatch!(iter.next(),
-            TK::Field => {
-                let name = require_identifier!(iter.next());
+        pmatch!(ctx,
+            Field => {
+                let name = expect_identifier!(ctx);
                 fields.push(name.to_owned());
             },
-            TK::Method => {
-                let name = require_identifier!(iter.next());
+            Method => {
+                let name = expect_identifier!(ctx);
                 methods.push(Method {
                     name: name.to_owned(),
-                    params: parse_list(iter, |iter| require_identifier!(iter.next()).to_owned()),
-                    body: if is!(iter.peek(), TK::BlockStart) {
-                        Some(parse_block(iter))
+                    params: parse_list(ctx, |ctx| Ok(expect_identifier!(ctx).to_owned()))?,
+                    body: if is!(ctx.iter.peek(), BlockStart) {
+                        Some(parse_block(ctx)?)
                     } else {
                         None
                     },
                 });
             },
-            TK::BlockEnd => break,
+            BlockEnd => break,
         )
     }
 
-    Class {
+    Ok(Class {
         name: name.to_owned(),
         parent: Some(parent.to_owned()),
         own_fields: fields,
         own_methods: methods,
-    }
+    })
 }
 
-pub fn parse_metadata(iter: &mut Peekable<Iter<Token>>) -> Metadata {
+fn parse_metadata(ctx: &mut ParseCtx) -> Result<Metadata> {
     let mut result = Metadata::default();
 
     loop {
-        match iter.peek().map(|t| &t.kind) {
-            Some(TK::Identifier(name)) => {
-                _ = iter.next();
-                require!(iter.next(), TK::BlockStart);
+        pmatch_maybe!(ctx.iter.peek(),
+            Some(TokenKind::Identifier(name)) => {
+                ctx.iter.next();
+                expect!(ctx, BlockStart);
                 match name.as_str() {
-                    "target" => result.target = require_identifier!(iter.next()).to_owned(),
-                    "import" => result.dependencies = parse_list(iter, |iter| require_identifier!(iter.next()).to_owned()),
-                    "entrypoint" => result.entrypoint = Some(require_identifier!(iter.next()).to_owned()),
-                    x => panic!("{x} is not a valid metadata entry"),
+                    "target" => result.target = expect_identifier!(ctx).to_owned(),
+                    "import" => result.dependencies = parse_list(ctx, |ctx| Ok(expect_identifier!(ctx).to_owned()))?,
+                    "entrypoint" => result.entrypoint = Some(expect_identifier!(ctx).to_owned()),
+                    x => bail!("'{x}' is not a valid metadata entry"),
                 }
             },
-            _ => return result
-        }
+            _ => return Ok(result)
+        )
     }
 }
 
-pub fn parse(tokens: Vec<Token>) -> (Metadata, Vec<Class>) {
-    let mut iter = tokens.iter().peekable();
+pub fn parse(file_name: &str, tokens: Vec<Token>) -> Result<(Metadata, Vec<Class>)> {
+    let mut ctx = ParseCtx {
+        iter: tokens.iter().peekable(),
+        file_name
+    };
 
-    let metadata = parse_metadata(&mut iter);
-    assert_eq!(metadata.target, CURRENT_VERSION, "Incompatible version! (program targets '{}', running '{}')", metadata.target, CURRENT_VERSION);
+    let metadata = parse_metadata(&mut ctx)?;
+    ensure!(metadata.target == CURRENT_VERSION, "Incompatible version! (program targets '{}', running '{}')", metadata.target, CURRENT_VERSION);
     let mut classes = Vec::new();
 
-    while iter.peek() != None {
-        classes.push(parse_class(&mut iter));
+    while ctx.iter.peek() != None {
+        classes.push(parse_class(&mut ctx)?);
     }
 
-    (metadata, classes)
+    Ok((metadata, classes))
 }

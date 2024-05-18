@@ -1,0 +1,254 @@
+   Compiling advrs v0.1.0 (/home/ketok/Projekty/advrs)
+error: no rules expected the token `TK::OpeningParens`
+  --> src/parser.rs:43:13
+   |
+10 | macro_rules! pmatch {
+   | ------------------- when calling this macro
+...
+43 |             $pat => (),
+   |             ^^^^ no rules expected this token in macro call
+...
+63 |     require!(iter.next(), TK::OpeningParens);
+   |     ---------------------------------------- in this macro invocation
+   |
+   = note: while trying to match sequence start
+   = note: this error originates in the macro `require` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error: no rules expected the token `::`
+  --> src/parser.rs:70:19
+   |
+10 | macro_rules! pmatch {
+   | ------------------- when calling this macro
+...
+70 |                 TK::ClosingParens => break,
+   |                   ^^ no rules expected this token in macro call
+   |
+note: while trying to match `=>`
+  --> src/parser.rs:11:32
+   |
+11 |     ($expr:expr, $( $pat:ident => $expr2:expr ),* $(,)?) => {
+   |                                ^^
+
+error: no rules expected the token `::`
+  --> src/parser.rs:80:11
+   |
+10 | macro_rules! pmatch {
+   | ------------------- when calling this macro
+...
+80 |         TK::Identifier(name) => parse_expression_further(iter, Expression::Get(name.to_owned())),
+   |           ^^ no rules expected this token in macro call
+   |
+note: while trying to match `=>`
+  --> src/parser.rs:11:32
+   |
+11 |     ($expr:expr, $( $pat:ident => $expr2:expr ),* $(,)?) => {
+   |                                ^^
+
+error: no rules expected the token `TK::BlockStart`
+   --> src/parser.rs:43:13
+    |
+10  | macro_rules! pmatch {
+    | ------------------- when calling this macro
+...
+43  |             $pat => (),
+    |             ^^^^ no rules expected this token in macro call
+...
+146 |     require!(iter.next(), TK::BlockStart);
+    |     ------------------------------------- in this macro invocation
+    |
+    = note: while trying to match sequence start
+    = note: this error originates in the macro `require` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error: no rules expected the token `TK::Class`
+   --> src/parser.rs:43:13
+    |
+10  | macro_rules! pmatch {
+    | ------------------- when calling this macro
+...
+43  |             $pat => (),
+    |             ^^^^ no rules expected this token in macro call
+...
+155 |     require!(iter.next(), TK::Class);
+    |     -------------------------------- in this macro invocation
+    |
+    = note: while trying to match sequence start
+    = note: this error originates in the macro `require` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error: no rules expected the token `TK::Extends`
+   --> src/parser.rs:43:13
+    |
+10  | macro_rules! pmatch {
+    | ------------------- when calling this macro
+...
+43  |             $pat => (),
+    |             ^^^^ no rules expected this token in macro call
+...
+157 |     require!(iter.next(), TK::Extends);
+    |     ---------------------------------- in this macro invocation
+    |
+    = note: while trying to match sequence start
+    = note: this error originates in the macro `require` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error: no rules expected the token `TK::BlockStart`
+   --> src/parser.rs:43:13
+    |
+10  | macro_rules! pmatch {
+    | ------------------- when calling this macro
+...
+43  |             $pat => (),
+    |             ^^^^ no rules expected this token in macro call
+...
+159 |     require!(iter.next(), TK::BlockStart);
+    |     ------------------------------------- in this macro invocation
+    |
+    = note: while trying to match sequence start
+    = note: this error originates in the macro `require` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error: no rules expected the token `::`
+   --> src/parser.rs:166:15
+    |
+10  | macro_rules! pmatch {
+    | ------------------- when calling this macro
+...
+166 |             TK::Field => {
+    |               ^^ no rules expected this token in macro call
+    |
+note: while trying to match `=>`
+   --> src/parser.rs:11:32
+    |
+11  |     ($expr:expr, $( $pat:ident => $expr2:expr ),* $(,)?) => {
+    |                                ^^
+
+error: no rules expected the token `TK::BlockStart`
+   --> src/parser.rs:43:13
+    |
+10  | macro_rules! pmatch {
+    | ------------------- when calling this macro
+...
+43  |             $pat => (),
+    |             ^^^^ no rules expected this token in macro call
+...
+201 |                 require!(iter.next(), TK::BlockStart);
+    |                 ------------------------------------- in this macro invocation
+    |
+    = note: while trying to match sequence start
+    = note: this error originates in the macro `require` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0425]: cannot find value `name` in this scope
+  --> src/parser.rs:51:33
+   |
+51 |             Identifier(name) => name,
+   |                                 ^^^^ not found in this scope
+...
+93 |             let name = require_identifier!(iter.next());
+   |                        -------------------------------- in this macro invocation
+   |
+   = note: this error originates in the macro `require_identifier` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0425]: cannot find value `name` in this scope
+   --> src/parser.rs:51:33
+    |
+51  |             Identifier(name) => name,
+    |                                 ^^^^ not found in this scope
+...
+103 |             let name = require_identifier!(iter.next());
+    |                        -------------------------------- in this macro invocation
+    |
+    = note: this error originates in the macro `require_identifier` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0425]: cannot find value `name` in this scope
+   --> src/parser.rs:51:33
+    |
+51  |             Identifier(name) => name,
+    |                                 ^^^^ not found in this scope
+...
+156 |     let name = require_identifier!(iter.next());
+    |                -------------------------------- in this macro invocation
+    |
+    = note: this error originates in the macro `require_identifier` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0425]: cannot find value `name` in this scope
+   --> src/parser.rs:51:33
+    |
+51  |             Identifier(name) => name,
+    |                                 ^^^^ not found in this scope
+...
+158 |     let parent = require_identifier!(iter.next());
+    |                  -------------------------------- in this macro invocation
+    |
+    = note: this error originates in the macro `require_identifier` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0425]: cannot find value `name` in this scope
+   --> src/parser.rs:51:33
+    |
+51  |             Identifier(name) => name,
+    |                                 ^^^^ not found in this scope
+...
+203 |                     "target" => result.target = require_identifier!(iter.next()).to_owned(),
+    |                                                 -------------------------------- in this macro invocation
+    |
+    = note: this error originates in the macro `require_identifier` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0425]: cannot find value `name` in this scope
+   --> src/parser.rs:51:33
+    |
+51  |             Identifier(name) => name,
+    |                                 ^^^^ not found in this scope
+...
+204 |                     "import" => result.dependencies = parse_list(iter, |iter| Ok(require_identifier!(iter.next()).to_owned()))?,
+    |                                                                                  -------------------------------- in this macro invocation
+    |
+    = note: this error originates in the macro `require_identifier` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0425]: cannot find value `name` in this scope
+   --> src/parser.rs:51:33
+    |
+51  |             Identifier(name) => name,
+    |                                 ^^^^ not found in this scope
+...
+205 |                     "entrypoint" => result.entrypoint = Some(require_identifier!(iter.next()).to_owned()),
+    |                                                              -------------------------------- in this macro invocation
+    |
+    = note: this error originates in the macro `require_identifier` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+warning: unused macro definition: `is`
+  --> src/parser.rs:56:14
+   |
+56 | macro_rules! is {
+   |              ^^
+   |
+   = note: `#[warn(unused_macros)]` on by default
+
+warning: unreachable expression
+   --> src/parser.rs:186:5
+    |
+164 | /     loop {
+165 | |         pmatch!(iter.next(),
+166 | |             TK::Field => {
+167 | |                 let name = require_identifier!(iter.next());
+...   |
+183 | |         )
+184 | |     }
+    | |_____- any code following this expression is unreachable
+185 |
+186 | /     Ok(Class {
+187 | |         name: name.to_owned(),
+188 | |         parent: Some(parent.to_owned()),
+189 | |         own_fields: fields,
+190 | |         own_methods: methods,
+191 | |     })
+    | |______^ unreachable expression
+    |
+    = note: `#[warn(unreachable_code)]` on by default
+
+warning: unused variable: `file_name`
+   --> src/parser.rs:214:14
+    |
+214 | pub fn parse(file_name: &str, tokens: Vec<Token>) -> Result<(Metadata, Vec<Class>)> {
+    |              ^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_file_name`
+    |
+    = note: `#[warn(unused_variables)]` on by default
+
+For more information about this error, try `rustc --explain E0425`.
+warning: `advrs` (lib) generated 3 warnings
+error: could not compile `advrs` (lib) due to 16 previous errors; 3 warnings emitted

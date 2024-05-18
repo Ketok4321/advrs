@@ -32,11 +32,11 @@ fn main() -> Result<()> {
     };
     let path = path::Path::new(&path);
 
-    let (metadata, pclasses) = parse_file(&path).with_context(|| "Failed to read program file")?;
+    let (metadata, pclasses) = parse_file(&path)?;
     classes.extend(pclasses);
 
     for dep in metadata.dependencies {
-        let (_, pclasses) = parse_file(&path.parent().unwrap().join(dep)).with_context(|| "Failed to read dependecy file")?;
+        let (_, pclasses) = parse_file(&path.parent().unwrap().join(dep))?;
         classes.extend(pclasses);
     }
 
@@ -76,5 +76,6 @@ fn main() -> Result<()> {
 }
 
 fn parse_file(path: &path::Path) -> Result<(Metadata, Vec<Class>)> {
-    Ok(parse(tokenize(path.to_str().with_context(|| "Failed to stringify path")?, &fs::read_to_string(&path)?)?))
+    let file_name = path.to_str().with_context(|| "Failed to stringify path")?;
+    Ok(parse(file_name, tokenize(file_name, &fs::read_to_string(&path)?)?)?)
 }
