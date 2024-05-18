@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use anyhow::{Result, Context};
+use anyhow::{Result, Context, ensure};
 
 use crate::syntax::*;
 
@@ -26,7 +26,7 @@ pub struct ClassTable {
 }
 
 impl ClassTable {
-    pub fn create(input: &Vec<Class>) -> ClassTable {
+    pub fn create(input: &Vec<Class>) -> Result<ClassTable> {
         let mut classes = Vec::with_capacity(input.len());
         let mut map = HashMap::with_capacity(input.len());
 
@@ -40,11 +40,11 @@ impl ClassTable {
             }
         }
 
-        fn add_with_parent(input: &Vec<Class>, parent: Option<String>, classes: &mut Vec<Class>, map: &mut HashMap<String, TypeRange>, parent_map: &HashMap<Option<String>, Vec<&Class>>) {
-            if let Some(pclasses) = parent_map.get(&parent) {
+        fn add_with_parent(input: &Vec<Class>, parent: Option<String>, classes: &mut Vec<Class>, map: &mut HashMap<String, TypeRange>, parent_map: &mut HashMap<Option<String>, Vec<&Class>>) {
+            if let Some(pclasses) = parent_map.remove(&parent) {
                 for c in pclasses {
                     let start = classes.len();
-                    classes.push(c.to_owned().to_owned());
+                    classes.push(c.to_owned());
                     add_with_parent(input, Some(c.name.to_owned()), classes, map, parent_map);
                     let end = classes.len();
                     
@@ -53,21 +53,23 @@ impl ClassTable {
             }
         }
 
-        add_with_parent(input, None, &mut classes, &mut map, &parent_map);
+        add_with_parent(input, None, &mut classes, &mut map, &mut parent_map);
+
+        ensure!(parent_map.len() == 0, "Classes {:?} have invalid parents ({:?})", parent_map.values().flatten().map(|c| c.name.to_owned()).collect::<Vec<_>>(), parent_map.keys().map(Option::to_owned).map(Option::unwrap).collect::<Vec<_>>());
 
         let null = map.get("Null").unwrap().to_owned(); // This one will always unwrap
         let truth = map.get("True").unwrap_or(&TypeRange::EMPTY).to_owned();
         let lie = map.get("False").unwrap_or(&TypeRange::EMPTY).to_owned();
         let program = map.get("Program").unwrap_or(&TypeRange::EMPTY).to_owned();
 
-        ClassTable {
+        Ok(ClassTable {
             classes,
             map,
             null,
             truth,
             lie,
             program,
-        }
+        })
     }
 
     pub fn get_class_id(&self, name: &str) -> Result<usize> {

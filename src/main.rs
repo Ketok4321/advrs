@@ -40,8 +40,8 @@ fn main() -> Result<()> {
         classes.extend(pclasses);
     }
 
-    let table = ClassTable::create(&classes);
-    let compiled = compile(&table);
+    let table = ClassTable::create(&classes)?;
+    let compiled = compile(&table)?;
     let entrypoint = {
         if let Some(entry_name) = metadata.entrypoint {
             table.get_class_id(&entry_name)
