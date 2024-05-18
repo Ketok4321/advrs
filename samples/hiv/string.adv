@@ -31,6 +31,10 @@ end
 
 class Character extends Object:
     method equals(c)
+
+    method toString():
+        return String.+(this)
+    end
 end
 
 class Input extends Object:

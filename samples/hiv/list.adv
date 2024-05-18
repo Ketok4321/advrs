@@ -186,12 +186,15 @@ class LinkedList extends List:
         iter1 = this.iterateNumless()
         iter2 = other.iterateNumless()
         while iter1.continue.and(iter2.continue):
-            a = iter1.next()
-            b = iter2.next()
+            a = iter1.getValue()
+            b = iter2.getValue()
 
             if a.equals(b).not():
                 return False
             end
+
+            iter1.next()
+            iter2.next()
         end
         
         if iter1.continue.or(iter2.continue): # Different length
@@ -199,6 +202,10 @@ class LinkedList extends List:
         end
 
         return True
+    end
+
+    method isEmpty():
+        return this._first is Null
     end
 
     method first():

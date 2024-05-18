@@ -1,0 +1,46 @@
+target: 'indev'
+import: ('hiv/core.adv', 'hiv/list.adv', 'hiv/string.adv', 'hiv/generated/characters.adv', 'hiv/string_number.adv')
+entrypoint: Calculator
+
+class Calculator extends Program:
+    field input
+    field output    
+
+    method main():
+        this.input = Input
+        this.output = Output
+        this.input.program = this
+        this.output.program = this
+        
+        in = this.input.read()
+        in.pop()
+        a = StringNumber.new(in)
+        in = this.input.read()
+        in.pop()
+        op = in
+        in = this.input.read()
+        in.pop()
+        b = StringNumber.new(in)
+
+        result = Null
+        
+        if op.equals('+'.toString()):
+            result = a.+(b)
+        end
+        if op.equals('-'.toString()):
+            result = a.-(b)
+        end
+        if op.equals('*'.toString()):
+            result = a.*(b)
+        end
+        if op.equals('/'.toString()):
+            result = a./(b)
+        end
+
+        if result is Null:
+            # TODO: Handle wrong operation
+        end
+
+        this.output.write(result.toString().+('\n'))
+    end
+end

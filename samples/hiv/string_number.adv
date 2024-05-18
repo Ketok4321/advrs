@@ -1,0 +1,138 @@
+class StringNumberImplementation extends NumberImplementation:
+    method zero():
+        return StringNumber.new('0'.toString())
+    end
+
+    method fromString(s):
+        return StringNumber.new(s)
+    end
+end
+
+class StringNumber extends Number:
+    field _str
+
+    method new(str):
+        this._str = str # TODO: Remove trailing zeros
+        
+        return this
+    end
+
+    method ++():
+        return StringNumber.new(this._incMut(this._str.clone()))
+    end
+
+    method _incMut(str):
+        digit = '0'
+        if str.isEmpty().not():
+            digit = str.pop()
+        end
+        digit = this._incChar(digit)
+        if digit is '0':
+            this._incMut(str)
+        end
+
+        str.push(digit)
+        return str
+    end
+
+    method _incChar(char):
+        if char is '0':
+            return '1'
+        end
+        if char is '1':
+            return '2'
+        end
+        if char is '2':
+            return '3'
+        end
+        if char is '3':
+            return '4'
+        end
+        if char is '4':
+            return '5'
+        end
+        if char is '5':
+            return '6'
+        end
+        if char is '6':
+            return '7'
+        end
+        if char is '7':
+            return '8'
+        end
+        if char is '8':
+            return '9'
+        end
+        if char is '9':
+            return '0'
+        end
+
+        this.panic()
+    end
+    
+    method --():
+        result = this._decMut(this._str.clone())
+        if result.isEmpty():
+            return StringNumber.new('0'.toString())
+        end
+
+        return StringNumber.new(result)
+    end
+
+    method _decMut(str):
+        digit = str.pop()
+        digit = this._decChar(digit)
+
+        if digit is '9':
+            this._decMut(str)
+        end
+        
+        if (digit is '0').and(str.isEmpty()).not():
+            str.push(digit)
+        end
+        return str
+    end
+
+    method _decChar(char):
+        if char is '0':
+            return '9'
+        end
+        if char is '1':
+            return '0'
+        end
+        if char is '2':
+            return '1'
+        end
+        if char is '3':
+            return '2'
+        end
+        if char is '4':
+            return '3'
+        end
+        if char is '5':
+            return '4'
+        end
+        if char is '6':
+            return '5'
+        end
+        if char is '7':
+            return '6'
+        end
+        if char is '8':
+            return '7'
+        end
+        if char is '9':
+            return '8'
+        end
+
+        this.panic()
+    end
+    
+    method isZero():
+        return this._str.equals('0'.toString())
+    end
+    
+    method toString():
+        return this._str
+    end
+end

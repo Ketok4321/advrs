@@ -1,0 +1,41 @@
+target: 'indev'
+import: ('hiv/core.adv', 'hiv/list.adv', 'hiv/string.adv', 'hiv/generated/characters.adv', 'hiv/string_number.adv', 'hiv/generated/class_number.adv')
+entrypoint: Fibonacci
+
+class Fibonacci extends Program:
+    field output
+
+    method compute(count):
+        list = LinkedList
+
+        #if count.isZero().or(count.equals(1)):
+            # TODO: Handle error
+        #end
+        list.push(1)
+        list.push(1)
+        count = count.-(2)
+
+        while count.isZero().not():
+            count = count.--()
+
+            list.push(list.last().+(list.get(list.size(ClassNumberImplementation).-(2))))
+        end
+
+        return list
+    end
+
+    method main():
+        this.output = Output
+        this.output.program = this
+
+        result = this.compute(12)
+
+        stringify = StringNumber.new('0'.toString()) # A hack to convert class numbers to strings
+    
+        iter = result.iterateNumless()
+        while iter.continue:
+            this.output.write(stringify.+(iter.getValue()).toString().+('\n'))
+            iter.next()
+        end
+    end
+end
