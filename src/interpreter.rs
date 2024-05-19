@@ -49,8 +49,8 @@ impl Object {
         }
     }
     
-    pub fn class_name(&self, class_table: &ClassTable) -> String {
-        class_table.classes[self.class].name.to_owned()
+    pub fn class_name<'a>(&self, class_table: &'a ClassTable) -> &'a str {
+        &class_table.classes[self.class].name
     }
     
     pub fn is(&self, range: &TypeRange) -> bool {
@@ -134,16 +134,16 @@ pub fn run(ctx: &RunCtx, gc: &mut GC, io: &mut IOManager, full_stack: &mut [Obje
 
         let mut i = 0;
         while i < ops.len() {
-            match ops[i].to_owned() {
-                New(class) => push!(Object::new(ctx, gc, class)),
+            match &ops[i] {
+                New(class) => push!(Object::new(ctx, gc, *class)),
                 GetV(id) => {
-                    assert_ne!(vars[id], Object::TRUE_NULL);
-                    push!(vars[id]);
+                    assert_ne!(vars[*id], Object::TRUE_NULL);
+                    push!(vars[*id]);
                 },
                 This => push!(*this),
                 GetF(name) => {
                     let obj = pop!();
-                    if let Some(index) = ctx.classes[obj.class].fields.iter().position(|f| **f == name) {
+                    if let Some(index) = ctx.classes[obj.class].fields.iter().position(|f| f == name) {
                         unsafe { push!((*obj.contents)[index]); }
                     } else {
                         panic!("No such field: {name}");
@@ -152,8 +152,8 @@ pub fn run(ctx: &RunCtx, gc: &mut GC, io: &mut IOManager, full_stack: &mut [Obje
                 Call(name, argc) => {
                     let obj_i = stack_pos - argc - 1;
                     let obj = stack[obj_i];
-                    let method = ctx.classes[obj.class].methods.iter().find(|&m| m.name == name).unwrap();
-                    assert_eq!(argc, method.params_count);
+                    let method = ctx.classes[obj.class].methods.iter().find(|m| m.name == *name).unwrap();
+                    assert_eq!(*argc, method.params_count);
 
                     stack_pos = obj_i;
                     push!(run(ctx, gc, io, &mut stack[obj_i..], method));
@@ -166,12 +166,12 @@ pub fn run(ctx: &RunCtx, gc: &mut GC, io: &mut IOManager, full_stack: &mut [Obje
                     let b = pop!();
                     push!(Object::bool(ctx, gc, a == b));
                 }
-                SetV(id) => vars[id] = pop!(),
+                SetV(id) => vars[*id] = pop!(),
                 SetF(name) => {
                     let value = pop!();
                     let obj = pop!();
 
-                    if let Some(index) = ctx.classes[obj.class].fields.iter().position(|f| **f == name) {
+                    if let Some(index) = ctx.classes[obj.class].fields.iter().position(|f| f == name) {
                         unsafe { (*obj.contents)[index] = value; }
                     } else {
                         panic!("No such field: {name}");
@@ -183,7 +183,7 @@ pub fn run(ctx: &RunCtx, gc: &mut GC, io: &mut IOManager, full_stack: &mut [Obje
                 },
                 Jump(expected, location) => {
                     if !expected ^ (pop!().is(&ctx.class_table.truth)) {
-                        i = location;
+                        i = *location;
                         continue;
                     }
                 },
