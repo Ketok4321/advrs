@@ -52,9 +52,11 @@ impl GC {
 
             fn add(keep_alive: &mut HashSet<*mut [Object]>, obj: &Object) {
                 unsafe {
-                    if keep_alive.insert(obj.contents) {
-                        for i in 0..ptr_len!(obj.contents) {
-                            add(keep_alive, &(*obj.contents)[i]);
+                    if ptr_len!(obj.contents) != 0 {
+                        if keep_alive.insert(obj.contents) {
+                            for i in 0..ptr_len!(obj.contents) {
+                                add(keep_alive, &(*obj.contents)[i]);
+                            }
                         }
                     }
                 }

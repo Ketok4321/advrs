@@ -12,7 +12,7 @@ macro_rules! pmatch {
             $( Some(Token { kind: TokenKind::$kind, .. }) => $kind_expr, )*
             None => bail!("{}: Expected a token, found eof", $ctx.file_name),
             Some(Token { line, column, kind }) => {
-                bail!("{}:{}:{}: Expected one of: {}; Got: {:?}", $ctx.file_name, line, column, stringify!($($kind),*), kind); // TODO: Show filename here
+                bail!("{}:{}:{}: Expected one of: {}; Got: {:?}", $ctx.file_name, line, column, stringify!($($kind),*), kind);
             },
         }
     };
@@ -22,7 +22,7 @@ macro_rules! pmatch {
             $( Some(Token { kind: TokenKind::$kind, .. }) => $kind_expr, )*
             None => bail!("{}: Expected a token, found eof", $ctx.file_name),
             Some(Token { line, column, kind }) => {
-                bail!("{}:{}:{}: Expected one of: Indentifier, {}; Got: {:?}", $ctx.file_name, line, column, stringify!($($kind),*), kind); // TODO: Show filename here
+                bail!("{}:{}:{}: Expected one of: Indentifier, {}; Got: {:?}", $ctx.file_name, line, column, stringify!($($kind),*), kind);
             },
         }
     };
