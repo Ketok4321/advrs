@@ -13,6 +13,7 @@ macro_rules! ptr_len {
 #[derive(PartialEq, Clone, Debug)]
 pub struct GC {
     allocations: HashSet<*mut [Object]>,
+    zero_alloc_index: usize,
     stack: *const [Object],
 }
 
@@ -20,21 +21,28 @@ impl GC {
     pub fn new(stack: *const [Object], heap_size: usize) -> Self {
         Self {
             allocations: HashSet::with_capacity(heap_size),
+            zero_alloc_index: 0,
             stack,
         }
     }
 
     pub fn alloc(&mut self, size: usize) -> *mut [Object] {
-        unsafe {
-            let layout = Layout::array::<Object>(size).expect("Invalid layout :<");
-            let allocated = ptr::slice_from_raw_parts(alloc(layout), size) as *mut [Object];
-            
-            if self.allocations.capacity() == self.allocations.len() {
-                self.collect();
-            }
-            self.allocations.insert(allocated);
+        if size == 0 {
+            let result = ptr::slice_from_raw_parts(self.zero_alloc_index as *mut Object, 0) as *mut [Object];
+            self.zero_alloc_index += 1;
+            result
+        } else {
+            unsafe {
+                let layout = Layout::array::<Object>(size).expect("Invalid layout :<");
+                let allocated = ptr::slice_from_raw_parts(alloc(layout), size) as *mut [Object];
+                
+                if self.allocations.capacity() == self.allocations.len() {
+                    self.collect();
+                }
+                self.allocations.insert(allocated);
 
-            allocated
+                allocated
+            }
         }
     }
 

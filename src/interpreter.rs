@@ -5,7 +5,7 @@ use crate::opcode::*;
 use crate::opcode::OpCode::*;
 use crate::gc::*;
 
-#[derive(Clone, Copy, Debug, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub struct Object {
     pub class: usize,
     pub contents: *mut [Object],
@@ -55,18 +55,6 @@ impl Object {
     
     pub fn is(&self, range: &TypeRange) -> bool {
         range.matches(self.class)
-    }
-}
-
-impl std::hash::Hash for Object {
-    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
-        self.contents.hash(state);
-    }
-}
-
-impl PartialEq for Object {
-    fn eq(&self, other: &Self) -> bool {
-        std::ptr::addr_eq(self.contents, other.contents)
     }
 }
 
