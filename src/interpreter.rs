@@ -149,6 +149,10 @@ pub fn run(ctx: &RunCtx, gc: &mut GC, io: &mut IOManager, full_stack: &mut [Obje
                         panic!("No such field: {name}");
                     }
                 },
+                GetFI(index) => {
+                    let obj = pop!();
+                    unsafe { push!((*obj.contents)[*index]); }
+                },
                 Call(name, argc) => {
                     let obj_i = stack_pos - argc - 1;
                     let obj = stack[obj_i];
@@ -176,6 +180,12 @@ pub fn run(ctx: &RunCtx, gc: &mut GC, io: &mut IOManager, full_stack: &mut [Obje
                     } else {
                         panic!("No such field: {name}");
                     }
+                },
+                SetFI(index) => {
+                    let value = pop!();
+                    let obj = pop!();
+
+                    unsafe { (*obj.contents)[*index] = value; }
                 },
                 Return => {
                     assert_eq!(stack_pos, 1);
