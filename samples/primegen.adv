@@ -1,0 +1,58 @@
+target: 'indev'
+import: ('hiv/core.adv', 'hiv/list.adv', 'hiv/string.adv', 'hiv/generated/characters.adv', 'hiv/string_number.adv', 'hiv/generated/class_number.adv')
+entrypoint: PrimeGenerator
+
+class PrimeGenerator extends Program:
+    field output
+
+    method compute(max):
+        list = LinkedList
+        list.push(2)
+
+        i = 3
+        while i.lesserThan(max):
+            if this.isPrime(i):
+                list.push(i)
+            end
+            i = i.+(2)
+        end
+
+        return list
+    end
+
+    method isPrime(n):
+        i = 2
+        while i.lesserThan(n):
+            if this.divisibleBy(n, i):
+                return False
+            end
+            i = i.++()
+        end
+        return True
+    end
+
+    method divisibleBy(a, b):
+        if a.isZero():
+            return True
+        end
+        if a.lesserThan(b):
+            return False
+        end
+        return this.divisibleBy(a.-(b), b)
+    end
+
+    method main():
+        this.output = Output
+        this.output.program = this
+
+        result = this.compute(200)
+
+        stringify = StringNumber.new('0'.toString()) # A hack to convert class numbers to strings
+    
+        iter = result.iterateNumless()
+        while iter.continue:
+            this.output.write(stringify.+(iter.getValue()).toString().+('\n'))
+            iter.next()
+        end
+    end
+end
