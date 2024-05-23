@@ -148,7 +148,7 @@ pub fn run(ctx: &RunCtx, gc: &mut GC, io: &mut IOManager, full_stack: &mut [Obje
                     if let Some(index) = ctx.classes[obj.class].fields.iter().position(|f| f == name) {
                         unsafe { push!((*obj.contents)[index]); }
                     } else {
-                        bail!("No such field: {name}");
+                        bail!("Type '{}' doesn't define field '{}'", obj.class_name(&ctx.class_table), name);
                     }
                 },
                 GetFI(index) => {
@@ -180,7 +180,7 @@ pub fn run(ctx: &RunCtx, gc: &mut GC, io: &mut IOManager, full_stack: &mut [Obje
                     if let Some(index) = ctx.classes[obj.class].fields.iter().position(|f| f == name) {
                         unsafe { (*obj.contents)[index] = value; }
                     } else {
-                        bail!("No such field: {name}");
+                        bail!("Type '{}' doesn't define field '{}'", obj.class_name(&ctx.class_table), name);
                     }
                 },
                 SetFI(index) => {
