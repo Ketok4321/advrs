@@ -43,32 +43,26 @@ fn main() -> Result<()> {
     let table = ClassTable::create(&classes)?;
     let compiled = compile(&table)?;
     let entrypoint = {
-        if let Some(entry_name) = metadata.entrypoint {
-            table.get_class_id(&entry_name)
-        } else {
-            let diff = table.program.1 - table.program.0;
-            match diff {
-                0 => bail!("Program class not defined"),
-                1 => bail!("No class extending program"),
-                2 => Ok(table.program.0 + 1),
-                _ => {
-                    println!("Choose which program to run:");
-                    for p in table.program.0+1..table.program.1 {
-                        println!("{}) {}", p - table.program.0, table.classes[p].name);
-                    }
-                    let mut inp = String::new();
-                    io::stdin().read_line(&mut inp)?;
-                    let n = inp.trim().parse::<usize>()?;
-                    ensure!(n >= 1 && n < diff, "Inputted number was not in range");
-                    Ok(table.program.0 + n)
+        match &metadata.entrypoints[..] {
+            [] => bail!("No entrypoint defined"),
+            [id] => Ok::<_, anyhow::Error>(table.get_class_id(&id)?),
+            list => {
+                println!("Choose entrypoint:");
+                for (i, ep) in list.iter().enumerate() {
+                    println!("{}) {}", i + 1, ep);
                 }
+                let mut inp = String::new();
+                io::stdin().read_line(&mut inp)?;
+                let n = inp.trim().parse::<usize>()?;
+                ensure!(n >= 1 && n <= list.len(), "Inputted number was not in range");
+                Ok(table.get_class_id(&list[n - 1])?)
             }
         }
     }.with_context(|| "Failed to find entrypoint")?;
     let mut stack = vec![Object::TRUE_NULL; 8192];
     let mut gc = GC::new(&stack[..] as *const [Object], 4096);
     let ctx = RunCtx::new(&mut gc, table, compiled, entrypoint);
-    stack[0] = ctx.program_obj;
+    stack[0] = ctx.entrypoint;
 
     run(&ctx, &mut gc, &mut IOManager::new(), &mut stack, ctx.classes[entrypoint].methods.iter().find(|m| m.name == "main").with_context(|| "The entrypoint class doesn't have a main method")?);
 

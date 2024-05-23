@@ -22,7 +22,6 @@ pub struct ClassTable {
     pub null: TypeRange,
     pub truth: TypeRange,
     pub lie: TypeRange,
-    pub program: TypeRange,
 }
 
 impl ClassTable {
@@ -60,7 +59,6 @@ impl ClassTable {
         let null = map.get("Null").unwrap().to_owned(); // This one will always unwrap
         let truth = map.get("True").unwrap_or(&TypeRange::EMPTY).to_owned();
         let lie = map.get("False").unwrap_or(&TypeRange::EMPTY).to_owned();
-        let program = map.get("Program").unwrap_or(&TypeRange::EMPTY).to_owned();
 
         Ok(ClassTable {
             classes,
@@ -68,7 +66,6 @@ impl ClassTable {
             null,
             truth,
             lie,
-            program,
         })
     }
 

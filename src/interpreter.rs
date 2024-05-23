@@ -61,17 +61,17 @@ impl Object {
 pub struct RunCtx {
     pub class_table: ClassTable,
     pub classes: Vec<CompiledClass>,
-    pub program_obj: Object,
+    pub entrypoint: Object,
 }
 
 impl RunCtx {
-    pub fn new(gc: &mut GC, class_table: ClassTable, classes: Vec<CompiledClass>, program_class: usize) -> Self {
+    pub fn new(gc: &mut GC, class_table: ClassTable, classes: Vec<CompiledClass>, entrypoint_class: usize) -> Self {
         let mut result = Self {
             class_table,
             classes,
-            program_obj: Object::TRUE_NULL,
+            entrypoint: Object::TRUE_NULL,
         };
-        result.program_obj = Object::new(&result, gc, program_class);
+        result.entrypoint = Object::new(&result, gc, entrypoint_class);
         result
     }
 }
@@ -203,35 +203,35 @@ pub fn run(ctx: &RunCtx, gc: &mut GC, io: &mut IOManager, full_stack: &mut [Obje
         }
         assert_eq!(stack_pos, 0);
     } else {
-        match method.name.as_str() {
-            "writeChar" if this.is(&ctx.class_table.program) => {
-                assert_eq!(*this, ctx.program_obj);
-                let class_name = rest[0].class_name(&ctx.class_table);
-                let char = class_name.strip_prefix('\'').unwrap().strip_suffix('\'').unwrap();
-                assert_eq!(char.len(), 1);
-                io.write_char(char.chars().nth(0).unwrap());
-            },
-            "endWrite" if this.is(&ctx.class_table.program) => {
-                assert_eq!(*this, ctx.program_obj);
-                io.write_end();
-            },
-            "startRead" if this.is(&ctx.class_table.program) => {
-                assert_eq!(*this, ctx.program_obj);
-                io.read_start();
-            },
-            "readChar" if this.is(&ctx.class_table.program) => {
-                assert_eq!(*this, ctx.program_obj);
-                if let Some(c) = io.read_char() {
-                    if let Some(class) = ctx.class_table.map.get(&format!("'{c}'")) {
-                        return Object::new_r(ctx, gc, *class);
+        if *this == ctx.entrypoint {
+            match method.name.as_str() {
+                "writeChar" => {
+                    let class_name = rest[0].class_name(&ctx.class_table);
+                    let char = class_name.strip_prefix('\'').unwrap().strip_suffix('\'').unwrap();
+                    assert_eq!(char.len(), 1);
+                    io.write_char(char.chars().nth(0).unwrap());
+                },
+                "endWrite" => {
+                    io.write_end();
+                },
+                "startRead" => {
+                    io.read_start();
+                },
+                "readChar" => {
+                    if let Some(c) = io.read_char() {
+                        if let Some(class) = ctx.class_table.map.get(&format!("'{c}'")) {
+                            return Object::new_r(ctx, gc, *class);
+                        } else {
+                            return Object::null(ctx, gc);
+                        }
                     } else {
                         return Object::null(ctx, gc);
                     }
-                } else {
-                    return Object::null(ctx, gc);
-                }
-            },
-            _ => panic!("Attempted to run a method without a body"),
+                },
+                _ => panic!("Attempted to run a method without a body on an entrypoint class"),
+            }
+        } else {
+            panic!("Attempted to run a method without a body");
         }
     }
     Object::null(ctx, gc)

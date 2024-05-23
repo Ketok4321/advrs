@@ -38,7 +38,7 @@ pub struct Class {
 pub struct Metadata {
     pub target: String,
     pub dependencies: Vec<String>,
-    pub entrypoint: Option<String>,
+    pub entrypoints: Vec<String>,
 }
 
 impl Metadata {
@@ -46,7 +46,7 @@ impl Metadata {
         Self {
             target: CURRENT_VERSION.to_string(),
             dependencies: vec![],
-            entrypoint: None,
+            entrypoints: vec![],
         }
     }
 }
