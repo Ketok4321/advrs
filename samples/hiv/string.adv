@@ -42,10 +42,10 @@ class Input extends Object:
     
     method read():
         result = String
-        this.program.read_start()
+        this.program.startRead()
 
         while True:
-            c = this.program.read_char()
+            c = this.program.readChar()
 
             if c is Null:
                 return result
@@ -62,9 +62,9 @@ class Output extends Object:
     method write(text):
         iter = text.iterateNumless()
         while iter.continue:
-            this.program.write_char(iter.getValue())
+            this.program.writeChar(iter.getValue())
             iter.next()
         end
-        this.program.write_end()
+        this.program.endWrite()
     end
 end
