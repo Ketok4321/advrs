@@ -209,10 +209,16 @@ class LinkedList extends List:
     end
 
     method first():
+        if this._first is Null:
+            return Null
+        end
         return this._first.value
     end
 
     method last():
+        if this._last is Null:
+            return Null
+        end
         return this._last.value
     end
 end

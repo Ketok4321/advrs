@@ -12,7 +12,13 @@ class StringNumber extends Number:
     field _str
 
     method new(str):
-        this._str = str # TODO: Remove trailing zeros
+	while str.first() is '0':
+	    str.popStart()
+	end
+	if str.isEmpty():
+	    str.push('0')
+	end
+        this._str = str
         
         return this
     end
@@ -71,12 +77,7 @@ class StringNumber extends Number:
     end
     
     method --():
-        result = this._decMut(this._str.clone())
-        if result.isEmpty():
-            return StringNumber.new('0'.toString())
-        end
-
-        return StringNumber.new(result)
+        return StringNumber.new(this._decMut(this._str.clone()))
     end
 
     method _decMut(str):
