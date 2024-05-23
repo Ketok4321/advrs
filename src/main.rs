@@ -64,7 +64,7 @@ fn main() -> Result<()> {
     let ctx = RunCtx::new(&mut gc, table, compiled, entrypoint);
     stack[0] = ctx.entrypoint;
 
-    run(&ctx, &mut gc, &mut IOManager::new(), &mut stack, ctx.classes[entrypoint].methods.iter().find(|m| m.name == "main").with_context(|| "The entrypoint class doesn't have a main method")?);
+    run(&ctx, &mut gc, &mut IOManager::new(), &mut stack, ctx.classes[entrypoint].methods.iter().find(|m| m.name == "main").with_context(|| "The entrypoint class doesn't have a main method")?).with_context(|| "Runtime error")?;
 
     Ok(())
 }

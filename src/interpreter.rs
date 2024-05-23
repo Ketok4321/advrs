@@ -1,5 +1,7 @@
 use std::io::prelude::*;
 
+use anyhow::{Result, Context, bail, ensure};
+
 use crate::class_table::*;
 use crate::opcode::*;
 use crate::opcode::OpCode::*;
@@ -109,7 +111,7 @@ impl IOManager {
     }
 }
 
-pub fn run(ctx: &RunCtx, gc: &mut GC, io: &mut IOManager, full_stack: &mut [Object], method: &CompiledMethod) -> Object {
+pub fn run(ctx: &RunCtx, gc: &mut GC, io: &mut IOManager, full_stack: &mut [Object], method: &CompiledMethod) -> Result<Object> {
     let (this, rest) = full_stack.split_first_mut().unwrap();
     if let Some(ops) = &method.body {
         let (vars, stack) = rest.split_at_mut(method.locals_size);
@@ -137,7 +139,7 @@ pub fn run(ctx: &RunCtx, gc: &mut GC, io: &mut IOManager, full_stack: &mut [Obje
             match &ops[i] {
                 New(class) => push!(Object::new(ctx, gc, *class)),
                 GetV(id) => {
-                    assert_ne!(vars[*id], Object::TRUE_NULL);
+                    ensure!(vars[*id] != Object::TRUE_NULL, "Attempted to use a variable before its initialization");
                     push!(vars[*id]);
                 },
                 This => push!(*this),
@@ -146,7 +148,7 @@ pub fn run(ctx: &RunCtx, gc: &mut GC, io: &mut IOManager, full_stack: &mut [Obje
                     if let Some(index) = ctx.classes[obj.class].fields.iter().position(|f| f == name) {
                         unsafe { push!((*obj.contents)[index]); }
                     } else {
-                        panic!("No such field: {name}");
+                        bail!("No such field: {name}");
                     }
                 },
                 GetFI(index) => {
@@ -156,11 +158,11 @@ pub fn run(ctx: &RunCtx, gc: &mut GC, io: &mut IOManager, full_stack: &mut [Obje
                 Call(name, argc) => {
                     let obj_i = stack_pos - argc - 1;
                     let obj = stack[obj_i];
-                    let method = ctx.classes[obj.class].methods.iter().find(|m| m.name == *name).unwrap();
-                    assert_eq!(*argc, method.params_count);
+                    let method = ctx.classes[obj.class].methods.iter().find(|m| m.name == *name).with_context(|| format!("Type '{}' doesn't define method '{}'", obj.class_name(&ctx.class_table), name))?;
+                    ensure!(*argc == method.params_count, "Method '{}.{}' takes {} arguments, but {} were provided", obj.class_name(&ctx.class_table), name, method.params_count, argc);
 
                     stack_pos = obj_i;
-                    push!(run(ctx, gc, io, &mut stack[obj_i..], method));
+                    push!(run(ctx, gc, io, &mut stack[obj_i..], method).with_context(|| format!("Failed to run method '{}.{}'", obj.class_name(&ctx.class_table), name))?);
                 },
                 Is(range) => {
                     push!(Object::bool(ctx, gc, pop!().is(&range)));
@@ -178,7 +180,7 @@ pub fn run(ctx: &RunCtx, gc: &mut GC, io: &mut IOManager, full_stack: &mut [Obje
                     if let Some(index) = ctx.classes[obj.class].fields.iter().position(|f| f == name) {
                         unsafe { (*obj.contents)[index] = value; }
                     } else {
-                        panic!("No such field: {name}");
+                        bail!("No such field: {name}");
                     }
                 },
                 SetFI(index) => {
@@ -189,7 +191,7 @@ pub fn run(ctx: &RunCtx, gc: &mut GC, io: &mut IOManager, full_stack: &mut [Obje
                 },
                 Return => {
                     assert_eq!(stack_pos, 1);
-                    return pop!();
+                    return Ok(pop!());
                 },
                 Jump(expected, location) => {
                     if !expected ^ (pop!().is(&ctx.class_table.truth)) {
@@ -220,19 +222,19 @@ pub fn run(ctx: &RunCtx, gc: &mut GC, io: &mut IOManager, full_stack: &mut [Obje
                 "readChar" => {
                     if let Some(c) = io.read_char() {
                         if let Some(class) = ctx.class_table.map.get(&format!("'{c}'")) {
-                            return Object::new_r(ctx, gc, *class);
+                            return Ok(Object::new_r(ctx, gc, *class));
                         } else {
-                            return Object::null(ctx, gc);
+                            return Ok(Object::null(ctx, gc));
                         }
                     } else {
-                        return Object::null(ctx, gc);
+                        return Ok(Object::null(ctx, gc));
                     }
                 },
-                _ => panic!("Attempted to run a method without a body on an entrypoint class"),
+                _ => bail!("Attempted to run a method without a body on an entrypoint class"),
             }
         } else {
-            panic!("Attempted to run a method without a body");
+            bail!("Attempted to run a method without a body");
         }
     }
-    Object::null(ctx, gc)
+    Ok(Object::null(ctx, gc))
 }
