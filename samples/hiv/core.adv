@@ -1,11 +1,11 @@
 class Program extends Object:
     method main()
 
-    method writeChar(c)
-    method endWrite()
+    method 'builtin:push_char'(c)
+    method 'builtin:pop_char'()
 
-    method startRead()
-    method readChar()
+    method 'builtin:write'()
+    method 'builtin:read'()
 end
 
 class Boolean extends Object:

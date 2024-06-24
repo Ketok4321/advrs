@@ -32,6 +32,10 @@ end
 class Character extends Object:
     method equals(c)
 
+    method isNewline():
+        return False
+    end
+
     method toString():
         return String.+(this)
     end
@@ -42,16 +46,18 @@ class Input extends Object:
     
     method read():
         result = String
-        this.program.startRead()
+        this.program.'builtin:read'()
 
         while True:
-            c = this.program.readChar()
+            c = this.program.'builtin:pop_char'()
 
-            if c is Null:
-                return result
+            if c is Character:
+                result.push(c)
+
+                if c.isNewline():
+                    return result
+                end
             end
-
-            result.push(c)
         end
     end
 end
@@ -62,9 +68,9 @@ class Output extends Object:
     method write(text):
         iter = text.iterateNumless()
         while iter.continue:
-            this.program.writeChar(iter.getValue())
+            this.program.'builtin:push_char'(iter.getValue())
             iter.next()
         end
-        this.program.endWrite()
+        this.program.'builtin:write'()
     end
 end

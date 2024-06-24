@@ -78,40 +78,7 @@ impl RunCtx {
     }
 }
 
-pub struct IOManager {
-    write_stack: String,
-    read_stack: String,
-}
-
-impl IOManager {
-    pub fn new() -> Self {
-        Self {
-            write_stack: String::new(),
-            read_stack: String::new(),
-        }
-    }
-
-    pub fn write_char(&mut self, c: char) {
-        self.write_stack.push(c);
-    }
-
-    pub fn write_end(&mut self) {
-        std::io::stdout().write_all(self.write_stack.as_bytes()).expect("Failed to write to stdout");
-        self.write_stack.clear();
-    }
-
-    pub fn read_start(&mut self) {
-        self.read_stack.clear();
-        std::io::stdin().read_line(&mut self.read_stack).expect("Failed to read from stdin");
-        self.read_stack = self.read_stack.chars().rev().collect();
-    }
-
-    pub fn read_char(&mut self) -> Option<char> {
-        self.read_stack.pop()
-    }
-}
-
-pub fn run(ctx: &RunCtx, gc: &mut GC, io: &mut IOManager, full_stack: &mut [Object], method: &CompiledMethod) -> Result<Object> {
+pub fn run(ctx: &RunCtx, gc: &mut GC, char_stack: &mut String, full_stack: &mut [Object], method: &CompiledMethod) -> Result<Object> {
     let (this, rest) = full_stack.split_first_mut().unwrap();
     if let Some(ops) = &method.body {
         let (vars, stack) = rest.split_at_mut(method.locals_size);
@@ -162,7 +129,7 @@ pub fn run(ctx: &RunCtx, gc: &mut GC, io: &mut IOManager, full_stack: &mut [Obje
                     ensure!(*argc == method.params_count, "Method '{}.{}' takes {} arguments, but {} were provided", obj.class_name(&ctx.class_table), name, method.params_count, argc);
 
                     stack_pos = obj_i;
-                    push!(run(ctx, gc, io, &mut stack[obj_i..], method).with_context(|| format!("Failed to run method '{}.{}'", obj.class_name(&ctx.class_table), name))?);
+                    push!(run(ctx, gc, char_stack, &mut stack[obj_i..], method).with_context(|| format!("Failed to run method '{}.{}'", obj.class_name(&ctx.class_table), name))?);
                 },
                 Is(range) => {
                     push!(Object::bool(ctx, gc, pop!().is(&range)));
@@ -207,28 +174,32 @@ pub fn run(ctx: &RunCtx, gc: &mut GC, io: &mut IOManager, full_stack: &mut [Obje
     } else {
         if *this == ctx.entrypoint {
             match method.name.as_str() {
-                "writeChar" => {
+                "builtin:push_char" => {
                     let class_name = rest[0].class_name(&ctx.class_table);
                     let char = class_name.strip_prefix('\'').unwrap().strip_suffix('\'').unwrap();
                     assert_eq!(char.len(), 1);
-                    io.write_char(char.chars().nth(0).unwrap());
+                    char_stack.push(char.chars().nth(0).unwrap());
                 },
-                "endWrite" => {
-                    io.write_end();
-                },
-                "startRead" => {
-                    io.read_start();
-                },
-                "readChar" => {
-                    if let Some(c) = io.read_char() {
-                        if let Some(class) = ctx.class_table.map.get(&format!("'{c}'")) {
-                            return Ok(Object::new_r(ctx, gc, *class));
+                "builtin:pop_char" => {
+                    if let Some(c) = char_stack.pop() {
+                        if let Ok(class) = ctx.class_table.get_class_id(&format!("'{c}'")) {
+                            return Ok(Object::new(ctx, gc, class));
                         } else {
                             return Ok(Object::null(ctx, gc));
                         }
                     } else {
                         return Ok(Object::null(ctx, gc));
                     }
+                },
+                "builtin:write" => {
+                    std::io::stdout().write_all(char_stack.as_bytes()).context("Failed to write to stdout")?;
+                    char_stack.clear();
+                },
+                "builtin:read" => {
+                    let mut inp = String::new();
+                    std::io::stdin().read_line(&mut inp).context("Failed to read from stdin")?;
+                    char_stack.clear();
+                    char_stack.extend(inp.chars().rev());
                 },
                 _ => bail!("Attempted to run a method without a body on an entrypoint class"),
             }

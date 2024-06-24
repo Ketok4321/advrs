@@ -572,4 +572,8 @@ class '\n' extends Character:
     method equals(c):
         return c is '\n'
     end
+
+    method isNewline():
+        return True
+    end
 end
