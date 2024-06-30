@@ -21,6 +21,7 @@ pub enum OpCode {
     SetFI(usize),
     Return,
     Jump(bool, usize),
+    Recurse,
 
     Pop,
 }
@@ -39,6 +40,7 @@ impl OpCode {
             SetF(_) | SetFI(_) => -1,
             Return => -1,
             Jump(_, _) => -1,
+            Recurse => panic!(),
             Pop => -1,
         }
     }
@@ -143,7 +145,24 @@ fn compile_block(class_table: &ClassTable, result: &mut Vec<OpCode>, locals: &mu
     Ok(())
 }
 
-fn optimize_body(this_fields: &Vec<String>, compiled_body: &mut Vec<OpCode>) -> Result<()> {
+fn optimize_body(this_fields: &Vec<String>, method: &Method, compiled_body: &mut Vec<OpCode>) -> Result<()> {
+    fn tail_call_optimization(method: &Method, compiled_body: &mut Vec<OpCode>, tail: usize) {
+        if let Call(name, argc) = &compiled_body[tail] {
+            if name == &method.name && argc == &method.params.len() {
+                let mut stack_diff = 0;
+                let mut j = tail;
+                while stack_diff != *argc as isize {
+                    j -= 1;
+                    stack_diff += compiled_body[j].stack_diff();
+                }
+                
+                if compiled_body[j - 1] == This {
+                    compiled_body[tail] = Recurse;
+                }
+            }
+        }
+    }
+
     for i in 0..compiled_body.len() {
         match &compiled_body[i] {
             GetF(name) => {
@@ -163,6 +182,8 @@ fn optimize_body(this_fields: &Vec<String>, compiled_body: &mut Vec<OpCode>) -> 
                     compiled_body[i] = SetFI(this_fields.iter().position(|f| f == name).with_context(|| format!("No such field {name}"))?)
                 }
             },
+            Return => tail_call_optimization(method, compiled_body, i - 1),
+            Pop if i == compiled_body.len() - 1 => tail_call_optimization(method, compiled_body, i - 1),
             _ => (),
         }
     }
@@ -174,7 +195,7 @@ fn compile_method(class_table: &ClassTable, method: &Method, this_fields: &Vec<S
         let mut locals = method.params.to_owned();
         let mut compiled_body = Vec::new();
         compile_block(class_table, &mut compiled_body, &mut locals, &body)?;
-        optimize_body(this_fields, &mut compiled_body)?;
+        optimize_body(this_fields, method, &mut compiled_body)?;
         Ok(CompiledMethod {
             name: method.name.to_owned(),
             body: Some(compiled_body),

@@ -1,0 +1,62 @@
+target: 'indev'
+import: ('hiv/core.adv', 'hiv/list.adv', 'hiv/string.adv', 'hiv/generated/characters.adv', 'hiv/string_number.adv', 'hiv/generated/class_number.adv')
+entrypoint: Calculator
+
+class Function extends Object:
+    method call()
+end
+
+class Loop extends Object:
+    method run(callback):
+        res = callback.call()
+        if res is Break:
+            return res.result
+        end
+
+        return this.run(callback)
+    end
+end
+
+class Break extends Object:
+    field result
+
+    method withResult(result):
+        this.result = result
+        
+        return this
+    end
+end
+
+class Calculator extends Program:
+    field input
+    field output    
+
+    method main():
+        this.input = Input
+        this.output = Output
+        this.input.program = this
+        this.output.program = this
+
+        Loop.run(MyFunc.new(this))
+    end
+end
+
+class MyFunc extends Function:
+    field program
+    field i
+
+    method new(program):
+        this.program = program
+        this.i = 10
+
+        return this
+    end
+
+    method call():
+        this.program.output.write(String.+('A').+('\n'))
+        this.i = this.i.--()
+        if this.i.isZero():
+            return Break
+        end
+    end
+end

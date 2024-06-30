@@ -166,6 +166,14 @@ pub fn run(ctx: &RunCtx, gc: &mut GC, char_stack: &mut String, full_stack: &mut 
                         continue;
                     }
                 },
+                Recurse => {
+                    vars[..method.params_count].clone_from_slice(&stack[1..stack_pos]);
+                    vars[method.params_count..].fill(Object::TRUE_NULL);
+                    stack[..stack_pos].fill(Object::TRUE_NULL);
+                    stack_pos = 0;
+                    i = 0;
+                    continue;
+                },
                 Pop => _ = pop!(),
             }
             i += 1;
