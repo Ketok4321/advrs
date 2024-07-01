@@ -1,4 +1,6 @@
-use anyhow::{Result, Context, bail};
+use std::rc::Rc;
+
+use anyhow::{Result, Context, Ok, bail};
 
 use crate::syntax::*;
 use crate::class_table::*;
@@ -57,7 +59,7 @@ pub struct CompiledMethod {
 #[derive(PartialEq, Clone, Debug)]
 pub struct CompiledClass {
     pub fields: Vec<String>,
-    pub methods: Vec<CompiledMethod>,
+    pub methods: Vec<Rc<CompiledMethod>>,
 }
 
 fn compile_expr(class_table: &ClassTable, result: &mut Vec<OpCode>, locals: &Vec<String>, expr: &Expression) -> Result<()> {
@@ -223,7 +225,7 @@ pub fn compile(class_table: &ClassTable) -> Result<Vec<CompiledClass>> {
         let parent = c.parent.to_owned().map(|p| &result[class_table.get_class_id(&p).unwrap()]);
 
         let fields = if let Some(p) = parent { inherit(&p.fields, &c.own_fields, |f| f) } else { c.own_fields.to_owned() };
-        let my_methods = c.own_methods.iter().map(|m| compile_method(class_table, m, &fields).with_context(|| format!("Failed to compile method '{}.{}'", c.name, m.name))).collect::<Result<Vec<_>, _>>()?;
+        let my_methods = c.own_methods.iter().map(|m| Ok(Rc::new(compile_method(class_table, m, &fields).with_context(|| format!("Failed to compile method '{}.{}'", c.name, m.name))?))).collect::<Result<Vec<_>, _>>()?;
         let methods = if let Some(p) = parent { inherit(&p.methods, &my_methods, |m| &m.name) } else { my_methods };
 
         result.push(CompiledClass {
