@@ -12,19 +12,28 @@ class StringNumber extends Number:
     field _str
 
     method new(str):
-	while str.first() is '0':
-	    str.popStart()
-	end
-	if str.isEmpty():
-	    str.push('0')
-	end
         this._str = str
+        this._fixZeros()
         
         return this
     end
 
+    method _fixZeros():
+        while this._str.first() is '0':
+            this._str.popStart()
+        end
+        if this._str.isEmpty():
+            this._str.push('0')
+        end
+    end
+
     method ++():
         return StringNumber.new(this._incMut(this._str.clone()))
+    end
+
+    method ++Disc():
+        this._incMut(this._str)
+        return this
     end
 
     method _incMut(str):
@@ -80,6 +89,12 @@ class StringNumber extends Number:
         return StringNumber.new(this._decMut(this._str.clone()))
     end
 
+    method --Disc():
+        this._decMut(this._str)
+        this._fixZeros()
+        return this
+    end
+
     method _decMut(str):
         digit = str.pop()
         digit = this._decChar(digit)
@@ -88,9 +103,7 @@ class StringNumber extends Number:
             this._decMut(str)
         end
         
-        if (digit is '0').and(str.isEmpty()).not():
-            str.push(digit)
-        end
+        str.push(digit)
         return str
     end
 
@@ -135,5 +148,9 @@ class StringNumber extends Number:
     
     method toString():
         return this._str
+    end
+
+    method clone():
+        return StringNumber.new(this._str.clone())
     end
 end

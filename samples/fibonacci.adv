@@ -28,7 +28,7 @@ class Fibonacci extends Program:
         this.output = Output
         this.output.program = this
 
-        result = this.compute(16)
+        result = this.compute(20)
 
         stringify = StringNumber.new('0'.toString()) # A hack to convert class numbers to strings
     

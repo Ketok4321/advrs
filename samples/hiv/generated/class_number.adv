@@ -8,6 +8,12 @@ class ClassNumber extends Number:
     method isZero():
         return False
     end
+    
+    method toString() # TODO
+
+    method clone():
+        return this
+    end
 end
 
 class 0 extends ClassNumber:

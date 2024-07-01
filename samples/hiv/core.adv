@@ -57,24 +57,47 @@ class Number extends Object:
     method isZero()
     
     method toString()
+
+    # If the number implementation has no internal state which can be changed via '++Disc' or '--Disc' methods it can just return 'this'
+    method clone()
+
+    # Methods '++Disc' and '--Disc' serve the same purpose as '++' and '--', but *might* mutate the object
+    # As you can not be sure if they will or will not mutate the original object, the object should be discarded after the use of these methods
+    # You might also want to use the 'clone' method before using these
+    # By default they redirect to '++' and '--' methods, but if an implementation can give faster results when mutating the original object these should be overriden
+    method ++Disc():
+        return this.++()
+    end
+
+    method --Disc():
+        return this.--()
+    end
     
     method +(n):
-        if n.isZero():
-            return this
+        result = this.clone()
+        n = n.clone()
+
+        while n.isZero().not():
+            result = result.++Disc()
+            n = n.--Disc()
         end
-        return (this.++()).+(n.--())
+        return result
     end
     
     method -(n):
-        if n.isZero():
-            return this
+        result = this.clone()
+        n = n.clone()
+
+        while n.isZero().not():
+            result = result.--Disc()
+            n = n.--Disc()
         end
-        return (this.--()).-(n.--())
+        return result
     end
     
     method *(n):
         result = this.-(this)
-        while (n.isZero()).not():
+        while n.isZero().not():
             result = result.+(this)
             n = n.--()
         end
@@ -84,7 +107,7 @@ class Number extends Object:
     method /(n):
         result = this.-(this)
         a = this
-        while (a.isZero()).not():
+        while a.isZero().not():
             a = a.-(n)
             result = result.++()
         end
@@ -92,11 +115,16 @@ class Number extends Object:
     end
     
     method equals(n):
-        return this.equalsStr(n.toString())
-    end
-    
-    method equalsStr(str):
-        return (this.toString()).equals(str)
+        if n.isZero():
+            if this.isZero():
+                return True
+            end
+            return False
+        end
+        if this.isZero():
+            return False
+        end
+        return this.--().equals(n.--())
     end
     
     method greaterThan(n):
@@ -109,7 +137,7 @@ class Number extends Object:
         if this.isZero():
             return False
         end
-        return (this.--()).greaterThan(n.--())
+        return this.--().greaterThan(n.--())
     end
     
     method lesserThan(n):
@@ -122,6 +150,6 @@ class Number extends Object:
         if this.isZero():
             return True
         end
-        return (this.--()).lesserThan(n.--())
+        return this.--().lesserThan(n.--())
     end
 end
