@@ -205,7 +205,7 @@ fn parse_metadata(ctx: &mut ParseCtx) -> Result<Metadata> {
                 expect!(ctx, BlockStart);
                 match name.as_str() {
                     "target" => result.target = expect_identifier!(ctx).to_owned(),
-                    "import" => result.dependencies = parse_list(ctx, |ctx| Ok(expect_identifier!(ctx).to_owned()))?,
+                    "import" => result.dependencies.push(expect_identifier!(ctx).to_owned()),
                     "entrypoint" => result.entrypoints.push(expect_identifier!(ctx).to_owned()),
                     x => bail!("'{x}' is not a valid metadata entry"),
                 }

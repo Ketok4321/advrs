@@ -1,5 +1,10 @@
 target: 'indev'
-import: ('hiv/core.adv', 'hiv/list.adv', 'hiv/string.adv', 'hiv/generated/characters.adv')
+
+import: 'hiv/core.adv'
+import: 'hiv/list.adv'
+import: 'hiv/string.adv'
+import: 'hiv/generated/characters.adv'
+
 entrypoint: Cat
 
 class Cat extends Program:

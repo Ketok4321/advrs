@@ -1,5 +1,12 @@
 target: 'indev'
-import: ('hiv/core.adv', 'hiv/list.adv', 'hiv/string.adv', 'hiv/generated/characters.adv', 'hiv/string_number.adv', 'hiv/generated/class_number.adv')
+
+import: 'hiv/core.adv'
+import: 'hiv/list.adv'
+import: 'hiv/string.adv'
+import: 'hiv/generated/characters.adv'
+import: 'hiv/generated/class_number.adv'
+import: 'hiv/string_number.adv'
+
 entrypoint: PrimeGenerator
 
 class PrimeGenerator extends Program:
