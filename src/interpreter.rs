@@ -189,12 +189,9 @@ pub fn run(ctx: &RunCtx, gc: &mut GC, char_stack: &mut String, full_stack: &mut 
                     char_stack.push(char.chars().nth(0).unwrap());
                 },
                 "builtin:pop_char" => {
-                    if let Some(c) = char_stack.pop() {
-                        if let Ok(class) = ctx.class_table.get_class_id(&format!("'{c}'")) {
-                            return Ok(Object::new(ctx, gc, class));
-                        } else {
-                            return Ok(Object::null(ctx, gc));
-                        }
+                    let char = char_stack.pop().unwrap_or('\0');
+                    if let Ok(class) = ctx.class_table.get_class_id(&format!("'{char}'")) {
+                        return Ok(Object::new(ctx, gc, class));
                     } else {
                         return Ok(Object::null(ctx, gc));
                     }

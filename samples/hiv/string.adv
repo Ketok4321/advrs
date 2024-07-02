@@ -51,12 +51,11 @@ class Input extends Object:
         while True:
             c = this.program.'builtin:pop_char'()
 
+            if c is '\0':
+                return result
+            end
             if c is Character:
                 result.push(c)
-
-                if c.isNewline():
-                    return result
-                end
             end
         end
     end

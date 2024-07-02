@@ -178,7 +178,7 @@ class LinkedList extends List:
         return this.iterateNumless()
     end
 
-    method iterateNumless():
+    method iterateNumless(): # TODO: Remove this shit (maybe)
         return LinkedListIterator.new(this)
     end
 

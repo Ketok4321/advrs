@@ -108,6 +108,7 @@ pub fn tokenize(file_name: &str, input: &str) -> Result<Vec<Token>> {
                         '\\' => string.push(match require_next!() {
                             'n' => '\n',
                             '\'' => '\'',
+                            '0' => '\0',
                             '\\' => '\\',
                             x => bail!("{file_name}:{line}:{column}: Invalid escape sequence: '\\{x}'"),
                         }),

@@ -1,12 +1,8 @@
-def char(c, nl=False):
+def char(c):
     print(f"""class '{c}' extends Character:
     method equals(c):
         return c is '{c}'
-    end{"""
-
-    method isNewline():
-        return True
-    end""" if nl else ""}
+    end
 end""")
 
 for i in range(32, 126+1):
@@ -15,4 +11,6 @@ for i in range(32, 126+1):
     if c == "\\": c = "\\\\"
     char(c)
     print()
-char("\\n", nl=True)
+char("\\n")
+print()
+char("\\0")
