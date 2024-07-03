@@ -11,6 +11,14 @@ class String extends LinkedList:
         return result
     end
 
+    method extend(s):
+        iter = s.iterateNumless()
+        while iter.continue:
+            this.push(iter.getValue())
+            iter.next()
+        end
+    end
+
     method +(s):
         result = this.clone()
 
@@ -19,11 +27,7 @@ class String extends LinkedList:
             return result
         end
 
-        iter = s.iterateNumless()
-        while iter.continue:
-            result.push(iter.getValue())
-            iter.next()
-        end
+        result.extend(s)
 
         return result
     end
