@@ -8,6 +8,7 @@ use advrs::class_table::*;
 use advrs::opcode::*;
 use advrs::interpreter::*;
 use advrs::gc::*;
+use advrs::stringifier::*;
 
 fn main() -> Result<()> {
     let mut classes = vec![
