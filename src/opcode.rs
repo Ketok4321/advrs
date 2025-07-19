@@ -222,7 +222,7 @@ pub fn compile(class_table: &ClassTable) -> Result<Vec<CompiledClass>> {
     let mut result: Vec<CompiledClass> = Vec::with_capacity(class_table.classes.len());
     
     for c in &class_table.classes {
-        let parent = c.parent.to_owned().map(|p| &result[class_table.get_class_id(&p).unwrap()]);
+        let parent = c.parent.as_ref().map(|p| &result[class_table.get_class_id(p).unwrap()]);
 
         let fields = if let Some(p) = parent { inherit(&p.fields, &c.own_fields, |f| f) } else { c.own_fields.to_owned() };
         let my_methods = c.own_methods.iter().map(|m| Ok(Rc::new(compile_method(class_table, m, &fields).with_context(|| format!("Failed to compile method '{}.{}'", c.name, m.name))?))).collect::<Result<Vec<_>, _>>()?;
