@@ -35,11 +35,6 @@ impl CodeBuilder {
         self
     }
 
-    pub fn append<S: AsRef<str>>(&mut self, s: S) -> &mut Self {
-        self.code.push_str(s.as_ref());
-        self
-    }
-
     pub fn tab(&mut self) -> &mut Self {
         self.tab_index += 1;
         self
