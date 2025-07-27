@@ -5,7 +5,7 @@ import: 'hiv/list.adv'
 import: 'hiv/string.adv'
 import: 'hiv/generated/characters.adv'
 
-entrypoint: HelloWorld
+entrypoint: 'HelloWorld'
 
 class HelloWorld extends Program:
     field output

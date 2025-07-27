@@ -182,25 +182,39 @@ pub fn run(ctx: &RunCtx, gc: &mut GC, char_stack: &mut String, full_stack: &mut 
     } else {
         if *this == ctx.entrypoint {
             match method.name.as_str() {
-                "builtin:push_char" => {
+                "'builtin:push_char'" => {
                     let class_name = rest[0].class_name(&ctx.class_table);
-                    let char = class_name.strip_prefix('\'').unwrap().strip_suffix('\'').unwrap();
-                    assert_eq!(char.len(), 1);
-                    char_stack.push(char.chars().nth(0).unwrap());
+                    let stripped = class_name.strip_prefix('\'').unwrap().strip_suffix('\'').unwrap();
+                    let char = match stripped {
+                        "\\n" => '\n',
+                        "\\'" => '\'',
+                        "\0" => '\0',
+                        "\\\\" => '\\',
+                        c if c.len() == 1 => c.chars().nth(0).unwrap(),
+                        _ => panic!()
+                    };
+                    char_stack.push(char);
                 },
-                "builtin:pop_char" => {
+                "'builtin:pop_char'" => {
                     let char = char_stack.pop().unwrap_or('\0');
-                    if let Ok(class) = ctx.class_table.get_class_id(&format!("'{char}'")) {
+                    let char_name = match char {
+                        '\n' => "\\n",
+                        '\'' => "\\'",
+                        '\0' => "\\0",
+                        '\\' => "\\\\",
+                        c => &c.to_string()
+                    };
+                    if let Ok(class) = ctx.class_table.get_class_id(&format!("'{char_name}'")) {
                         return Ok(Object::new(ctx, gc, class));
                     } else {
                         return Ok(Object::null(ctx, gc));
                     }
                 },
-                "builtin:write" => {
+                "'builtin:write'" => {
                     std::io::stdout().write_all(char_stack.as_bytes()).context("Failed to write to stdout")?;
                     char_stack.clear();
                 },
-                "builtin:read" => {
+                "'builtin:read'" => {
                     let mut inp = String::new();
                     std::io::stdin().read_line(&mut inp).context("Failed to read from stdin")?;
                     char_stack.clear();

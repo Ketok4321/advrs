@@ -16,9 +16,9 @@ macro_rules! pmatch {
             },
         }
     };
-    ($ctx:expr, Identifier($name:ident) => $ident_expr:expr, $( $kind:ident => $kind_expr:expr ),* $(,)?) => {
+    ($ctx:expr, Identifier($name:ident, $is_str:ident) => $ident_expr:expr, $( $kind:ident => $kind_expr:expr ),* $(,)?) => {
         match $ctx.iter.next() {
-            Some(Token { kind: TokenKind::Identifier($name), .. }) => $ident_expr,
+            Some(Token { kind: TokenKind::Identifier($name, $is_str), .. }) => $ident_expr,
             $( Some(Token { kind: TokenKind::$kind, .. }) => $kind_expr, )*
             None => bail!("{}: Expected a token, found eof", $ctx.file_name),
             Some(Token { line, column, kind }) => {
@@ -44,10 +44,28 @@ macro_rules! expect {
     }
 }
 
+macro_rules! str_identifier { // is it a good idea to allocate a new string each time?
+    ($name:expr, $is_str:expr) => {
+        if !$is_str {
+            $name.to_owned()
+        } else {
+            format!("'{}'", $name)
+        }
+    }
+}
+
 macro_rules! expect_identifier {
     ($ctx:expr) => {
         pmatch!($ctx,
-            Identifier(name) => name,
+            Identifier(name, is_str) => str_identifier!(name, is_str),
+        )
+    }
+}
+
+macro_rules! expect_str {
+    ($ctx:expr) => {
+        pmatch!($ctx,
+            Identifier(name, true) => name,
         )
     }
 }
@@ -81,7 +99,7 @@ fn parse_list<T>(ctx: &mut ParseCtx, parser: fn(&mut ParseCtx) -> Result<T>) -> 
 
 fn parse_expression(ctx: &mut ParseCtx) -> Result<Expression> {
     pmatch!(ctx,
-        Identifier(name) => parse_expression_further(ctx, Expression::Get(name.to_owned())),
+        Identifier(name, is_str) => parse_expression_further(ctx, Expression::Get(str_identifier!(name, is_str))),
         OpeningParens => {
             let result = parse_expression(ctx)?;
             expect!(ctx, ClosingParens);
@@ -200,13 +218,13 @@ fn parse_metadata(ctx: &mut ParseCtx) -> Result<Metadata> {
 
     loop {
         pmatch_maybe!(ctx.iter.peek(),
-            Some(TokenKind::Identifier(name)) => {
+            Some(TokenKind::Identifier(name, false)) => {
                 ctx.iter.next();
                 expect!(ctx, BlockStart);
                 match name.as_str() {
-                    "target" => result.target = expect_identifier!(ctx).to_owned(),
-                    "import" => result.dependencies.push(expect_identifier!(ctx).to_owned()),
-                    "entrypoint" => result.entrypoints.push(expect_identifier!(ctx).to_owned()),
+                    "target" => result.target = expect_str!(ctx).to_owned(),
+                    "import" => result.dependencies.push(expect_str!(ctx).to_owned()),
+                    "entrypoint" => result.entrypoints.push(expect_str!(ctx).to_owned()),
                     x => bail!("'{x}' is not a valid metadata entry"),
                 }
             },

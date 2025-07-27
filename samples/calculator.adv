@@ -6,7 +6,7 @@ import: 'hiv/string.adv'
 import: 'hiv/generated/characters.adv'
 import: 'hiv/string_number.adv'
 
-entrypoint: Calculator
+entrypoint: 'Calculator'
 
 class Calculator extends Program:
     field input

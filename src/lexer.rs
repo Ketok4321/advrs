@@ -4,7 +4,7 @@ use self::TokenKind::*;
 
 #[derive(PartialEq, Clone, Debug)]
 pub enum TokenKind {
-    Identifier(String),
+    Identifier(String, bool),
 
     BlockStart,
     BlockEnd,
@@ -97,7 +97,7 @@ pub fn tokenize(file_name: &str, input: &str) -> Result<Vec<Token>> {
                     "extends" => Extends,
                     "field" => Field,
                     "method" => Method,
-                    _ => Identifier(string),
+                    _ => Identifier(string, false),
                 })
             },
             '\'' => {
@@ -105,21 +105,15 @@ pub fn tokenize(file_name: &str, input: &str) -> Result<Vec<Token>> {
                 loop {
                     match require_next!() {
                         '\'' => break,
-                        '\\' => string.push(match require_next!() {
-                            'n' => '\n',
-                            '\'' => '\'',
-                            '0' => '\0',
-                            '\\' => '\\',
-                            x => bail!("{file_name}:{line}:{column}: Invalid escape sequence: '\\{x}'"),
-                        }),
-                        s => string.push(s),
+                        s => {
+                            string.push(s);
+                            if s == '\\' {
+                                string.push(require_next!());
+                            }
+                        },
                     }
                 }
-                if string.len() == 1 {
-                    Some(Identifier(format!("'{string}'")))
-                } else {
-                    Some(Identifier(string))
-                }
+                Some(Identifier(string, true))
             },
             '#' => {
                 while iter.peek() != Some(&'\n') && iter.peek() != None {
