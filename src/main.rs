@@ -11,7 +11,7 @@ use advrs::gc::*;
 use advrs::stringifier::*;
 
 fn main() -> Result<()> {
-    let mut classes = vec![
+    let builtin_classes = vec![
         Class {
             name: "Object".to_string(),
             parent: None,
@@ -29,21 +29,22 @@ fn main() -> Result<()> {
     let path = if let Some(p) = env::args().nth(2) {
         p
     } else {
-        bail!("Usage: {} [run|dump] [file]", env::args().nth(0).unwrap_or("adv".to_string()));
+        bail!("Usage: {} [run|merge] [file]", env::args().nth(0).unwrap_or("adv".to_string()));
     };
     let path = path::Path::new(&path);
 
-    let (metadata, pclasses) = parse_file(&path)?;
-    classes.extend(pclasses);
+    let (metadata, mut classes) = parse_file(&path)?;
 
     for dep in &metadata.dependencies {
-        let (_, pclasses) = parse_file(&path.parent().unwrap().join(dep))?;
-        classes.extend(pclasses);
+        let (_, dclasses) = parse_file(&path.parent().unwrap().join(dep))?;
+        classes.extend(dclasses);
     }
 
     match env::args().nth(1).unwrap().as_str() {
         "run" => {
-            let table = ClassTable::create(&classes)?;
+            let all_classes = [builtin_classes, classes].concat();
+
+            let table = ClassTable::create(&all_classes)?;
             let compiled = compile(&table)?;
             let entrypoint = {
                 match &metadata.entrypoints[..] {
@@ -70,8 +71,13 @@ fn main() -> Result<()> {
             run(&ctx, &mut gc, &mut String::new(), &mut stack, ctx.classes[entrypoint].methods.iter().find(|m| m.name == "main").with_context(|| "The entrypoint class doesn't have a main method")?).with_context(|| "Runtime error")?;
 
         },
-        "dump" => {
-            println!("{}", stringify(&metadata, &classes));
+        "merge" => {
+            let new_metadata = Metadata {
+                dependencies: vec![],
+                ..metadata
+            };
+
+            println!("{}", stringify(&new_metadata, &classes));
         },
         _ => bail!("You're using it wrong :<"),
     }
