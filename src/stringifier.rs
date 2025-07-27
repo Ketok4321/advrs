@@ -64,7 +64,7 @@ fn stringify_expression(expr: &Expression) -> String {
         GetF(obj, name) => stringify_expression(obj) + "." + name,
         Call(obj, name, args) => stringify_expression(obj) + "." + name + stringify_list(args, stringify_expression).as_str(),
         Is(obj, class) => format!("{} is {}", stringify_expression(obj), class),
-        Equals(obj1, obj2) => format!("{} == {}", stringify_expression(obj1), stringify_expression(obj2)),
+        Equals(obj1, obj2) => format!("{} = {}", stringify_expression(obj1), stringify_expression(obj2)),
     }
 }
 
@@ -127,8 +127,23 @@ fn stringify_class(bd: &mut CodeBuilder, class: &Class) {
     bd.untab().line("end");
 }
 
-pub fn stringify(classes: &[Class]) -> String {
+fn stringify_metadata(bd: &mut CodeBuilder, metadata: &Metadata) {
+    bd.line(format!("target: '{}'", metadata.target));
+    bd.newline();
+    for import in &metadata.dependencies {
+        bd.line(format!("import: '{}'", import));
+    }
+    bd.newline();
+    for entry in &metadata.entrypoints {
+        bd.line(format!("entrypoint: '{}'", entry));
+    }
+    bd.newline();
+}
+
+pub fn stringify(metadata: &Metadata, classes: &[Class]) -> String {
     let mut bd = CodeBuilder::new();
+
+    stringify_metadata(&mut bd, metadata);
 
     for c in classes {
         stringify_class(&mut bd, c);

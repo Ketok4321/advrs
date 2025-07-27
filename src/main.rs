@@ -36,7 +36,7 @@ fn main() -> Result<()> {
     let (metadata, pclasses) = parse_file(&path)?;
     classes.extend(pclasses);
 
-    for dep in metadata.dependencies {
+    for dep in &metadata.dependencies {
         let (_, pclasses) = parse_file(&path.parent().unwrap().join(dep))?;
         classes.extend(pclasses);
     }
@@ -71,7 +71,7 @@ fn main() -> Result<()> {
 
         },
         "dump" => {
-            println!("{}", stringify(&classes));
+            println!("{}", stringify(&metadata, &classes));
         },
         _ => bail!("You're using it wrong :<"),
     }
