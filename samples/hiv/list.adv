@@ -221,6 +221,18 @@ class LinkedList extends List:
         end
         return this._last.value
     end
+    
+    method clone():
+        result = LinkedList
+
+        iter = this.iterateNumless()
+        while iter.continue:
+            result.push(iter.getValue())
+            iter.next()
+        end
+
+        return result
+    end
 end
 
 class _LinkedList_Cell extends Object:

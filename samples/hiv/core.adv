@@ -46,7 +46,6 @@ end
 
 class NumberImplementation extends Object:
     method zero()
-    method fromString(s)
 end
 
 class Number extends Object:
@@ -56,8 +55,6 @@ class Number extends Object:
     
     method isZero()
     
-    method toString()
-
     # If the number implementation has no internal state which can be changed via '++Disc' or '--Disc' methods it can just return 'this'
     method clone()
 
@@ -114,42 +111,55 @@ class Number extends Object:
         return result
     end
     
+    method compareTo(n):
+        if n.isZero():
+            if this.isZero():
+                return Equal
+            end
+            return Greater
+        end
+        if this.isZero():
+            return Lesser
+        end
+        return this.--().compareTo(n.--())
+    end
+
     method equals(n):
-        if n.isZero():
-            if this.isZero():
-                return True
-            end
-            return False
-        end
-        if this.isZero():
-            return False
-        end
-        return this.--().equals(n.--())
+        return this.compareTo(n) is Equal
     end
-    
-    method greaterThan(n):
-        if n.isZero():
-            if this.isZero():
-                return False
-            end
-            return True
-        end
-        if this.isZero():
-            return False
-        end
-        return this.--().greaterThan(n.--())
+end
+
+class CmpResult extends Object:
+    method isGreaterOrEqual()
+    method isLesserOrEqual()
+end
+
+class Equal extends CmpResult:
+    method isGreaterOrEqual():
+        return True
     end
-    
-    method lesserThan(n):
-        if n.isZero():
-            if this.isZero():
-                return False
-            end
-            return False
-        end
-        if this.isZero():
-            return True
-        end
-        return this.--().lesserThan(n.--())
+
+    method isLesserOrEqual():
+        return True
+    end
+end
+
+class Lesser extends CmpResult:
+    method isGreaterOrEqual():
+        return False
+    end
+
+    method isLesserOrEqual():
+        return True
+    end
+end
+
+class Greater extends CmpResult:
+    method isGreaterOrEqual():
+        return True
+    end
+
+    method isLesserOrEqual():
+        return False
     end
 end

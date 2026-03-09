@@ -2,10 +2,6 @@ class StringNumberImplementation extends NumberImplementation:
     method zero():
         return StringNumber.new('0'.toString())
     end
-
-    method fromString(s):
-        return StringNumber.new(s)
-    end
 end
 
 class StringNumber extends Number:

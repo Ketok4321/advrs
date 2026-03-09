@@ -17,7 +17,7 @@ class PrimeGenerator extends Program:
         list.push(2)
 
         i = 3
-        while i.lesserThan(max):
+        while i.compareTo(max) is Lesser:
             if this.isPrime(i):
                 list.push(i)
             end
@@ -29,7 +29,7 @@ class PrimeGenerator extends Program:
 
     method isPrime(n):
         i = 2
-        while i.lesserThan(n):
+        while i.compareTo(n) is Lesser:
             if this.divisibleBy(n, i):
                 return False
             end
@@ -42,7 +42,7 @@ class PrimeGenerator extends Program:
         if a.isZero():
             return True
         end
-        if a.lesserThan(b):
+        if a.compareTo(b) is Lesser:
             return False
         end
         return this.divisibleBy(a.-(b), b)

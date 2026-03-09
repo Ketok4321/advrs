@@ -1,0 +1,47 @@
+target: 'indev'
+
+import: 'hiv/core.adv'
+import: 'hiv/list.adv'
+import: 'hiv/string.adv'
+import: 'hiv/generated/characters.adv'
+import: 'hiv/binary_number.adv'
+import: 'hiv/string_number.adv'
+
+entrypoint: 'Binaryfier'
+
+class Binaryfier extends Program:
+    field input 
+    field output
+
+    method main():
+        this.input = Input
+        this.input.program = this
+        this.output = Output
+        this.output.program = this
+
+        nstr = this.input.read()
+        nstr.pop() # remove \n
+
+        n = BinaryNumber.zero().+(StringNumber.new(nstr))
+        
+        this.output.write(this.binstr(n).+('\n'))
+    end
+
+    method binstr(n):
+        result = String
+        iter = n._digits.iterateNumless()
+        while iter.continue:
+            result.pushStart(this.bchar(iter.getValue()))
+            iter.next()
+        end
+
+        return result
+    end
+
+    method bchar(b):
+        if b:
+            return '1'
+        end
+        return '0'
+    end
+end

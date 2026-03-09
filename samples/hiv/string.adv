@@ -1,5 +1,5 @@
 class String extends LinkedList:
-    method clone():
+    method clone(): # Same as LinkedList but returns a String
         result = String
 
         iter = this.iterateNumless()

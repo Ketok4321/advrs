@@ -9,8 +9,6 @@ class ClassNumber extends Number:
         return False
     end
     
-    method toString() # TODO
-
     method clone():
         return this
     end

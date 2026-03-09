@@ -1,0 +1,82 @@
+class BinaryNumberImplementation extends NumberImplementation:
+    method zero():
+        return BinaryNumber.zero()
+    end
+end
+
+class BinaryNumber extends Number:
+    field _digits
+
+    method new(digits):
+        this._digits = digits
+        this._fixZeros()
+        
+        return this
+    end
+
+    method zero():
+        this._digits = LinkedList
+
+        return this
+    end
+
+    method _fixZeros():
+        while this._digits.last() is False:
+            this._digits.pop()
+        end
+    end
+
+    method ++():
+        return BinaryNumber.new(this._incMut(this._digits.clone()))
+    end
+
+    method ++Disc():
+        this._incMut(this._digits)
+        return this
+    end
+
+    method _incMut(digits):
+        iter = digits.iterateNumless()
+        while iter.continue:
+            if iter.getValue() is False:
+                iter.setValue(True)
+                return digits
+            end
+            iter.setValue(False)
+            iter.next()
+        end
+        digits.push(True)
+        return digits
+    end
+    
+    method --():
+        return BinaryNumber.new(this._decMut(this._digits.clone()))
+    end
+
+    method --Disc():
+        this._decMut(this._digits)
+        this._fixZeros()
+        return this
+    end
+
+    method _decMut(digits):
+        iter = digits.iterateNumless()
+        while iter.continue:
+            if iter.getValue() is True:
+                iter.setValue(False)
+                return digits
+            end
+            iter.setValue(True)
+            iter.next()
+        end
+        this.panic() # Decreasing zero
+    end
+    
+    method isZero():
+        return this._digits.isEmpty()
+    end
+
+    method clone():
+        return BinaryNumber.new(this._digits.clone())
+    end
+end
