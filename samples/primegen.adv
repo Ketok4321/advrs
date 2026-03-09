@@ -5,6 +5,7 @@ import: 'hiv/list.adv'
 import: 'hiv/string.adv'
 import: 'hiv/generated/characters.adv'
 import: 'hiv/generated/class_number.adv'
+import: 'hiv/number.adv'
 import: 'hiv/string_number.adv'
 
 entrypoint: 'PrimeGenerator'
