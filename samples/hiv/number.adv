@@ -83,6 +83,29 @@ class Number extends Object:
     end
 end
 
+class MutableNumber extends Number:
+    method clone()
+
+    method increment()
+    method decrement()
+
+    method ++():
+        return this.clone().increment()
+    end
+
+    method --():
+        return this.clone().decrement()
+    end
+
+    method ++Disc():
+        return this.increment()
+    end
+
+    method --Disc():
+        return this.decrement()
+    end
+end
+
 class CmpResult extends Object:
     method isGreaterOrEqual()
     method isLesserOrEqual()

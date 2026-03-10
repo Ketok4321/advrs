@@ -4,7 +4,7 @@ class BinaryNumberImplementation extends NumberImplementation:
     end
 end
 
-class BinaryNumber extends Number:
+class BinaryNumber extends MutableNumber:
     field _digits
 
     method new(digits):
@@ -26,45 +26,27 @@ class BinaryNumber extends Number:
         end
     end
 
-    method ++():
-        return BinaryNumber.new(this._incMut(this._digits.clone()))
-    end
-
-    method ++Disc():
-        this._incMut(this._digits)
-        return this
-    end
-
-    method _incMut(digits):
-        iter = digits.iterateNumless()
+    method increment():
+        iter = this._digits.iterateNumless()
         while iter.continue:
             if iter.getValue() is False:
                 iter.setValue(True)
-                return digits
+                return this 
             end
             iter.setValue(False)
             iter.next()
         end
-        digits.push(True)
-        return digits
-    end
-    
-    method --():
-        return BinaryNumber.new(this._decMut(this._digits.clone()))
-    end
-
-    method --Disc():
-        this._decMut(this._digits)
-        this._fixZeros()
+        this._digits.push(True)
         return this
     end
-
-    method _decMut(digits):
-        iter = digits.iterateNumless()
+    
+    method decrement():
+        iter = this._digits.iterateNumless()
         while iter.continue:
             if iter.getValue() is True:
                 iter.setValue(False)
-                return digits
+                this._fixZeros()
+                return this
             end
             iter.setValue(True)
             iter.next()
