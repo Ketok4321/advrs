@@ -14,7 +14,7 @@ pub struct Object {
 }
 
 impl Object {
-    pub const TRUE_NULL: Self = Self { class: 0, contents: std::ptr::null_mut::<[Self;0]>() as *mut [Self]};
+    pub const TRUE_NULL: Self = Self { class: 0, contents: std::ptr::null_mut::<[Self;0]>() as *mut [Self]}; // Technically this type could be equal to one specific instance of Null. it might cause some issues
 
     pub fn new(ctx: &RunCtx, gc: &mut GC, class: usize) -> Self {
         let cclass = &ctx.classes[class];

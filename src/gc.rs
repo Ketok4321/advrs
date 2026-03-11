@@ -5,10 +5,8 @@ use std::num::Wrapping;
 
 use crate::interpreter::*;
 
-macro_rules! ptr_len {
-    ($ptr:expr) => {
-        ptr::NonNull::new_unchecked($ptr as *mut [Object]).len()
-    }
+unsafe fn ptr_len(ptr: *const [Object]) -> usize {
+    (&*ptr).len()
 }
 
 #[derive(PartialEq, Clone, Debug)]
@@ -48,14 +46,15 @@ impl GC {
     }
 
     pub fn collect(&mut self) {
+        let old = self.allocations.len();
         unsafe {
             let mut keep_alive = HashSet::with_capacity(self.allocations.capacity());
 
             fn add(keep_alive: &mut HashSet<*mut [Object]>, obj: &Object) {
                 unsafe {
-                    if ptr_len!(obj.contents) != 0 {
+                    if ptr_len(obj.contents) != 0 {
                         if keep_alive.insert(obj.contents) {
-                            for i in 0..ptr_len!(obj.contents) {
+                            for i in 0..ptr_len(obj.contents) {
                                 add(keep_alive, &(*obj.contents)[i]);
                             }
                         }
@@ -63,19 +62,20 @@ impl GC {
                 }
             }
 
-            for i in 0..ptr_len!(self.stack) {
-                let fella = (*self.stack)[i];
-                if fella == Object::TRUE_NULL {
-                    break;
+            for i in 0..ptr_len(self.stack) { // TODO: Don't iterate over the entire thing
+                let fella = &(*self.stack)[i];
+                if fella != &Object::TRUE_NULL {
+                    add(&mut keep_alive, fella);
                 }
-                add(&mut keep_alive, &fella);
             }
 
             for garbage in &self.allocations - &keep_alive {
-                dealloc(garbage as *mut u8, Layout::array::<Object>(ptr_len!(garbage)).expect("Invalid layout :<"));
+                dealloc(garbage as *mut Object as *mut u8, Layout::array::<Object>(ptr_len(garbage)).expect("Invalid layout :<"));
             }
 
             self.allocations = keep_alive;
         }
+        let new = self.allocations.len();
+        eprintln!("GC | Before: {}, After: {}, Collected: {}", old, new, old - new);
     }
 }
