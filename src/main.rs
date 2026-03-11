@@ -63,8 +63,8 @@ fn main() -> Result<()> {
                     }
                 }
             }.with_context(|| "Failed to find entrypoint")?;
-            let mut stack = vec![Object::TRUE_NULL; 8192];
-            let mut gc = GC::new(&stack[..] as *const [Object], 4096);
+            let mut stack = vec![Object::TRUE_NULL; 1024];
+            let mut gc = GC::new(&stack[..] as *const [Object], 1024);
             let ctx = RunCtx::new(&mut gc, table, compiled, entrypoint);
             stack[0] = ctx.entrypoint;
 
