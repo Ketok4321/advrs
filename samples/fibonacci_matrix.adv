@@ -1,0 +1,105 @@
+target: 'indev'
+
+import: 'hiv/core.adv'
+import: 'hiv/list.adv'
+import: 'hiv/string.adv'
+import: 'hiv/generated/characters.adv'
+import: 'hiv/number.adv'
+import: 'hiv/string_number.adv'
+import: 'hiv/binary_number.adv'
+
+entrypoint: 'FibonacciTerm'
+
+class Vector2 extends Object:
+    field x
+    field y
+
+    method new(x, y):
+        this.x = x
+        this.y = y
+
+        return this
+    end
+    
+    method +(other):
+        return Vector2.new(this.x.+(other.x), this.y.+(other.y))
+    end
+    
+    method -(other):
+        return Vector2.new(this.x.-(other.x), this.y.-(other.y))
+    end
+
+    method *(n):
+        return Vector2.new(this.x.*(n), this.y.*(n))
+    end
+
+    method /(n):
+        return Vector2.new(this.x./(n), this.y./(n))
+    end
+end
+
+class Matrix2x2 extends Object:
+    field columnA
+    field columnB
+
+    method new(columnA, columnB):
+        this.columnA = columnA
+        this.columnB = columnB
+
+        return this
+    end
+
+    method *(other):
+        if other is Vector2:
+            return this.columnA.*(other.x).+(this.columnB.*(other.y))
+        end
+        if other is Matrix2x2:
+            return Matrix2x2.new(this.*(other.columnA), this.*(other.columnB))
+        end
+    end
+end
+
+class FibonacciTerm extends Program:
+    field input
+    field output
+
+    method nthTerm(n):
+        if (n is BinaryNumber).not():
+            n = BinaryNumber.zero().+(n)
+        end
+
+        0 = BinaryNumber.zero()
+        1 = 0.++()
+
+        transition = Matrix2x2.new(Vector2.new(1, 1), Vector2.new(1, 0))
+        state = Vector2.new(1, 0)
+
+        iter = n._digits.iterateNumless()
+        while iter.continue:
+            if iter.getValue():
+                state = transition.*(state)
+            end
+            transition = transition.*(transition)
+            iter.next()
+        end
+
+        return state.y
+    end
+
+    method main():
+        this.input = Input
+        this.input.program = this
+        this.output = Output
+        this.output.program = this
+
+        n = this.input.read()
+        n.pop()
+
+        result = this.nthTerm(StringNumber.new(n))
+
+        stringify = StringNumber.new('0'.toString()) # A hack to convert class numbers to strings
+    
+        this.output.write(stringify.+(result).toString().+('\n'))
+    end
+end
+

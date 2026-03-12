@@ -4,7 +4,7 @@ class StringNumberImplementation extends NumberImplementation:
     end
 end
 
-class StringNumber extends MutableNumber:
+class StringNumber extends Number:
     field _str
 
     method new(str):
