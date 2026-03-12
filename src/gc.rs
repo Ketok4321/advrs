@@ -3,7 +3,25 @@ use std::ptr;
 use std::collections::HashSet;
 use std::num::Wrapping;
 
-use crate::interpreter::*;
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+pub struct Object {
+    pub class: usize,
+    pub contents: *mut [Object],
+}
+
+impl Object {
+    pub fn get(&self, index: usize) -> Object {
+        unsafe {
+            (*self.contents)[index]
+        }
+    }
+    
+    pub fn set(&self, index: usize, value: Object) {
+        unsafe {
+            (*self.contents)[index] = value
+        }
+    }
+}
 
 unsafe fn ptr_len(ptr: *const [Object]) -> usize {
     (&*ptr).len()

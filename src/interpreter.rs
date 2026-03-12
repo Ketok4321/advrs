@@ -7,12 +7,6 @@ use crate::opcode::*;
 use crate::opcode::OpCode::*;
 use crate::gc::*;
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
-pub struct Object {
-    pub class: usize,
-    pub contents: *mut [Object],
-}
-
 impl Object {
     pub const TRUE_NULL: Self = Self { class: 0, contents: std::ptr::null_mut::<[Self;0]>() as *mut [Self]}; // Technically this type could be equal to one specific instance of Null. it might cause some issues
 
@@ -20,15 +14,17 @@ impl Object {
         let cclass = &ctx.classes[class];
         let len = cclass.fields.len();
         let contents = gc.alloc(len);
-
-        for i in 0..len {
-            unsafe { (*contents)[i] = Self::null(ctx, gc) };
-        }
         
-        Self {
+        let result = Self {
             class,
             contents,
+        };
+
+        for i in 0..len {
+            result.set(i, Self::null(ctx, gc));
         }
+
+        result
     }
 
     pub fn new_r(ctx: &RunCtx, gc: &mut GC, range: TypeRange) -> Self {
@@ -113,14 +109,14 @@ pub fn run(ctx: &RunCtx, gc: &mut GC, char_stack: &mut String, full_stack: &mut 
                 GetF(name) => {
                     let obj = pop!();
                     if let Some(index) = ctx.classes[obj.class].fields.iter().position(|f| f == name) {
-                        unsafe { push!((*obj.contents)[index]); }
+                        push!(obj.get(index));
                     } else {
                         bail!("Type '{}' doesn't define field '{}'", obj.class_name(&ctx.class_table), name);
                     }
                 },
                 GetFI(index) => {
                     let obj = pop!();
-                    unsafe { push!((*obj.contents)[*index]); }
+                    push!(obj.get(*index));
                 },
                 Call(name, argc) => {
                     let obj_i = stack_pos - argc - 1;
@@ -145,7 +141,7 @@ pub fn run(ctx: &RunCtx, gc: &mut GC, char_stack: &mut String, full_stack: &mut 
                     let obj = pop!();
 
                     if let Some(index) = ctx.classes[obj.class].fields.iter().position(|f| f == name) {
-                        unsafe { (*obj.contents)[index] = value; }
+                        obj.set(index, value)
                     } else {
                         bail!("Type '{}' doesn't define field '{}'", obj.class_name(&ctx.class_table), name);
                     }
@@ -154,7 +150,7 @@ pub fn run(ctx: &RunCtx, gc: &mut GC, char_stack: &mut String, full_stack: &mut 
                     let value = pop!();
                     let obj = pop!();
 
-                    unsafe { (*obj.contents)[*index] = value; }
+                    obj.set(*index, value);
                 },
                 Return => {
                     assert_eq!(stack_pos, 1);
