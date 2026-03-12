@@ -8,6 +8,8 @@ class BinaryNumber extends MutableNumber:
     field _digits
 
     method new(digits):
+        TypeError.require(digits is LinkedList)
+
         this._digits = digits
         this._fixZeros()
         

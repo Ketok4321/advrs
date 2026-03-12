@@ -29,6 +29,8 @@ class Binaryfier extends Program:
     end
 
     method binstr(n):
+        TypeError.require(n is BinaryNumber)
+
         result = String
         iter = n._digits.iterateNumless()
         while iter.continue:
@@ -40,6 +42,8 @@ class Binaryfier extends Program:
     end
 
     method bchar(b):
+        TypeError.require(b is Boolean)
+
         if b:
             return '1'
         end

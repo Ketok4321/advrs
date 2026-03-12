@@ -14,11 +14,13 @@ class Fibonacci extends Program:
     field output
 
     method compute(count):
+        TypeError.require(count is Number)
+
         list = LinkedList
 
-        #if count.isZero().or(count.equals(1)):
-            # TODO: Handle error
-        #end
+        if count.isZero().or(count.equals(1)):
+            Error.throw()
+        end
         list.push(1)
         list.push(1)
         count = count.-(2)

@@ -25,6 +25,8 @@ class Number extends Object:
     end
     
     method +(n):
+        TypeError.require(n is Number)
+
         result = this.clone()
         n = n.clone()
 
@@ -36,6 +38,8 @@ class Number extends Object:
     end
     
     method -(n):
+        TypeError.require(n is Number)
+
         result = this.clone()
         n = n.clone()
 
@@ -47,6 +51,8 @@ class Number extends Object:
     end
     
     method *(n):
+        TypeError.require(n is Number)
+
         result = this.-(this)
         while n.isZero().not():
             result = result.+(this)
@@ -56,6 +62,8 @@ class Number extends Object:
     end
     
     method /(n):
+        TypeError.require(n is Number)
+
         result = this.-(this)
         a = this
         while a.isZero().not():
@@ -66,6 +74,8 @@ class Number extends Object:
     end
     
     method compareTo(n):
+        TypeError.require(n is Number)
+
         if n.isZero():
             if this.isZero():
                 return Equal
@@ -79,6 +89,10 @@ class Number extends Object:
     end
 
     method equals(n):
+        if (n is Number).not():
+            return False
+        end
+
         return this.compareTo(n) is Equal
     end
 end

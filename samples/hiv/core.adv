@@ -43,3 +43,17 @@ class False extends Boolean:
         return b
     end
 end
+
+class Error extends Object:
+    method throw():
+        this._throw() # cause a crash
+    end
+end
+
+class TypeError extends Error:
+    method require(b):
+        if b.not():
+            this.throw()
+        end
+    end
+end

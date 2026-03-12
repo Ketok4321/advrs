@@ -8,7 +8,7 @@ class List extends Object:
     method size(numberImpl)
 
     method iterate(numberImpl):
-        return UniversalIterator.new(this, numberImpl.zero())
+        return IndexedIterator.new(this, numberImpl.zero())
     end
 end
 
@@ -21,11 +21,14 @@ class Iterator extends Object:
     method setValue(value)
 end
 
-class UniversalIterator extends Iterator:
+class IndexedIterator extends Iterator:
     field _list
     field _index
 
     method new(list, startIndex):
+        TypeError.require(list is List)
+        TypeError.require(startIndex is Number)
+
         this._list = list
         this._index = startIndex
         this.continue = list.size().isZero().not()
@@ -52,6 +55,8 @@ class ArrayList extends List:
     field _size
 
     method new(array, numberImpl):
+        TypeError.require(numberImpl is NumberImplementation)
+
         this.array = array
         this._size = numberImpl.zero()
 
@@ -69,14 +74,20 @@ class ArrayList extends List:
     end
 
     method get(index):
+        TypeError.require(index is Number)
+
         return this.array.get(index)
     end
 
     method set(index, value):
+        TypeError.require(index is Number)
+
         this.array.set(index, value)
     end
 
     method size(numberImpl):
+        TypeError.require(numberImpl is NumberImplementation)
+
         return this._size
     end
 end
@@ -164,6 +175,8 @@ class LinkedList extends List:
     end
 
     method size(numberImpl):
+        TypeError.require(numberImpl is NumberImplementation)
+
         res = numberImpl.zero()
         cell = this._first
         while cell is _LinkedList_Cell:
@@ -183,6 +196,10 @@ class LinkedList extends List:
     end
 
     method equals(other):
+        if (other is LinkedList).not():
+            return False
+        end
+
         iter1 = this.iterateNumless()
         iter2 = other.iterateNumless()
         while iter1.continue.and(iter2.continue):
@@ -245,6 +262,8 @@ class LinkedListIterator extends Iterator:
     field _cell
 
     method new(list):
+        TypeError.require(list is LinkedList)
+
         this._cell = list._first
         this.continue = (this._cell) is _LinkedList_Cell
 

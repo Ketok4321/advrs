@@ -8,6 +8,8 @@ class StringNumber extends Number:
     field _str
 
     method new(str):
+        TypeError.require(str is String)
+
         this._str = str
         this._fixZeros()
         

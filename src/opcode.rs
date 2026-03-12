@@ -84,7 +84,8 @@ fn compile_expr(class_table: &ClassTable, result: &mut Vec<OpCode>, locals: &Vec
                 compile_expr(class_table, result, locals, obj)?;
                 result.push(Is(range.to_owned()));
            } else {
-                bail!("Couldn't find a class named '{class}'");
+                eprintln!("Warning: Couldn't find a class named '{class}', 'is' check will be ignored");
+                result.push(New(class_table.lie.0))
            }
         },
         Expression::Equals(a, b) => {

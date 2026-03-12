@@ -1,22 +1,18 @@
 class String extends LinkedList:
     method clone(): # Same as LinkedList but returns a String
-        result = String
-
-        iter = this.iterateNumless()
-        while iter.continue:
-            result.push(iter.getValue())
-            iter.next()
-        end
-
-        return result
+        return String.extend(this)
     end
 
     method extend(s):
+        TypeError.require(s is String)
+
         iter = s.iterateNumless()
         while iter.continue:
             this.push(iter.getValue())
             iter.next()
         end
+
+        return this
     end
 
     method +(s):
@@ -26,6 +22,8 @@ class String extends LinkedList:
             result.push(s)
             return result
         end
+        
+        TypeError.require(s is String)
 
         result.extend(s)
 
@@ -69,6 +67,8 @@ class Output extends Object:
     field program
     
     method write(text):
+        TypeError.require(text is String)
+
         iter = text.iterateNumless()
         while iter.continue:
             this.program.'builtin:push_char'(iter.getValue())
